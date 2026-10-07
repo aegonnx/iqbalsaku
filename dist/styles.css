@@ -204,3 +204,23 @@ dialog::backdrop{background:#020617a6}
 :root:not([data-theme="dark"]) .date-group .transaction{background:var(--expense-surface);border:1px solid var(--expense-border);border-radius:16px;margin-top:12px;padding:16px 12px}
 
 .sync-banner{font-size:14px;color:var(--muted);padding:0 4px 14px;line-height:1.5}.account-email{overflow-wrap:anywhere}.sync-conflict{margin-top:16px}.sync-conflict[hidden]{display:none}
+
+html{overscroll-behavior-y:contain}
+.pull-refresh{position:fixed;top:calc(env(safe-area-inset-top,0px) + 12px);left:50%;transform:translate(-50%,-80px);opacity:0;z-index:100;width:max-content;max-width:calc(100vw - 32px);padding:12px 20px;border:1px solid var(--line);border-radius:24px;background:var(--surface,#fff);color:var(--text);box-shadow:0 4px 20px #0002;font-size:14px;font-weight:600;pointer-events:none;transition:transform .18s ease,opacity .18s ease}
+.pull-refresh.visible{transform:translate(-50%,0);opacity:1}
+@media(prefers-reduced-motion:reduce){.pull-refresh{transition:none}}
+
+/* Keep editing actions outside the scrolling fields, above the phone keyboard. */
+dialog .dialog-inner{display:flex;flex-direction:column;max-height:calc(var(--visible-height,100dvh) - 32px);overflow:hidden}
+dialog .dialog-header{flex-shrink:0;margin-bottom:16px}
+dialog .expense-form,dialog .confirm-form{min-height:0;overflow-y:auto;overscroll-behavior:contain;padding:4px;scroll-padding-bottom:24px}
+dialog .confirmation-copy{flex-shrink:0;margin-bottom:16px}
+dialog .dialog-inner>.form-actions{flex-shrink:0;margin-top:16px;padding-top:16px;border-top:1px solid var(--line);background:var(--surface)}
+.settings-actions{position:sticky;bottom:calc(96px + var(--keyboard-space,0px));z-index:5;padding:12px 0;background:var(--surface);border-top:1px solid var(--line)}
+@media(max-width:600px){
+ dialog[open],#expense-dialog[open]{position:fixed;top:auto;bottom:var(--keyboard-space,0px);left:0;right:0;margin:0 auto;width:100%;max-width:480px;max-height:calc(var(--visible-height,100dvh) - 16px);border-radius:24px 24px 0 0;padding-bottom:env(safe-area-inset-bottom)}
+ dialog .dialog-inner{max-height:calc(var(--visible-height,100dvh) - 32px);padding:20px}
+ .keyboard-open .bottom-nav{display:none}
+ .keyboard-open .settings-actions{bottom:var(--keyboard-space,0px)}
+ .keyboard-open main{padding-bottom:calc(var(--keyboard-space,0px) + 24px)}
+}

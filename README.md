@@ -11,7 +11,7 @@ Requires Node.js 20 or newer. Run `npm start`, then open `http://localhost:4173`
 - Read shows the remaining monthly budget, a full-width Makan budget card with its recommended daily allowance, and expenses grouped by date.
 - Add expenses from the center button in the bottom navigation. Amount and category are required; description, date, and note are optional details.
 - Analyze shows spending by category and budget status. The settings button contains budgets, categories, quick entries, and backups.
-- Amounts support shorthand such as `10k`; IDR displays with Indonesian separators.
+- All money inputs default to thousands: `500` stores 500,000 and `10` stores 10,000. `10k` also works. The expense unit switch allows full amounts; existing records and backups retain full numeric values. IDR displays with Indonesian separators.
 - The date defaults to the device's local date. Daily recommendations divide the remaining category budget by days after today, or the full period for future months.
 - Selecting a category closes the filter panel while keeping the results filtered. Month labels use Jan, Feb, Sep, Oct, and similar abbreviations.
 
@@ -49,3 +49,6 @@ Run `npm test` for calculations, expense changes, month changes, and backup vali
 
 Account data is cached under a separate IndexedDB key for offline use. Signing out switches back to signed-out device data and requires pending changes to finish syncing first. Supabase and email delivery setup still need live verification.
 
+
+On touch screens, pull down at the top of a page and release to refresh the current expense data and sync online. Refresh is disabled while entering an expense or saving.
+Editing dialogs keep Save and Delete in a footer outside the scrolling fields. Settings save controls stay above navigation, and Visual Viewport resizing keeps controls within the visible area when a phone keyboard opens. Keyboard layout was verified with a simulated viewport; actual iPhone and Android keyboards still need device testing.
