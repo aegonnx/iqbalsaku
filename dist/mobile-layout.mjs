@@ -22,21 +22,24 @@ export function installKeyboardLayout(){
  const viewport=window.visualViewport;
  if(!viewport)return;
  const root=document.documentElement;
- let fullHeight=window.innerHeight;
+ let fullHeight=window.innerHeight,frame=0,lastHeight=-1,lastGap=-1;
  const update=()=>{
   const editing=document.activeElement?.matches('input,textarea,select');
   const wasOpen=root.classList.contains('keyboard-open');
   if(!editing&&!wasOpen)fullHeight=window.innerHeight;
   const keyboardOpen=Boolean((editing||wasOpen)&&viewport.scale===1&&fullHeight-viewport.height>120);
-  const gap=keyboardOpen?Math.max(0,window.innerHeight-viewport.height-viewport.offsetTop):0;
-  root.style.setProperty('--keyboard-space',gap+'px');
-  root.style.setProperty('--visible-height',viewport.height+'px');
+  const gap=keyboardOpen?Math.round(Math.max(0,window.innerHeight-viewport.height-viewport.offsetTop)):0;
+  const height=Math.round(viewport.height);
+  if(gap!==lastGap){root.style.setProperty('--keyboard-space',gap+'px');lastGap=gap;}
+  if(height!==lastHeight){root.style.setProperty('--visible-height',height+'px');lastHeight=height;}
   root.classList.toggle('keyboard-open',keyboardOpen);
  };
- viewport.addEventListener('resize',update);viewport.addEventListener('scroll',update);
- window.addEventListener('resize',update);
- window.addEventListener('orientationchange',()=>{fullHeight=window.innerHeight;update();});
- document.addEventListener('focusin',update);
- document.addEventListener('focusout',()=>setTimeout(update,0));
+ const schedule=()=>{if(!frame)frame=requestAnimationFrame(()=>{frame=0;update();});};
+ viewport.addEventListener('resize',schedule);viewport.addEventListener('scroll',schedule);
+ window.addEventListener('resize',schedule);
+ window.addEventListener('orientationchange',()=>{fullHeight=window.innerHeight;schedule();});
+ document.addEventListener('focusin',schedule);
+ document.addEventListener('focusout',schedule);
  update();
+ return update;
 }

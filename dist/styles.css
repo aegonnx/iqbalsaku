@@ -230,3 +230,16 @@ dialog .dialog-inner>.form-actions{flex-shrink:0;margin-top:16px;padding-top:16p
 .pull-refresh.visible .refresh-spinner{animation:refresh-spin .7s linear infinite}
 @keyframes refresh-spin{to{transform:rotate(360deg)}}
 @media(prefers-reduced-motion:reduce){.pull-refresh.visible .refresh-spinner{animation:none}}
+
+:root{--motion-duration:220ms;--motion-ease:cubic-bezier(.22,1,.36,1)}
+dialog[data-motion]{will-change:transform,opacity}
+dialog[data-motion="closing"]{pointer-events:none}
+dialog[data-motion="opening"]::backdrop{animation:backdrop-enter 240ms var(--motion-ease) both}
+dialog[data-motion="closing"]::backdrop{animation:backdrop-exit 180ms var(--motion-ease) both}
+@keyframes backdrop-enter{from{opacity:0}to{opacity:1}}
+@keyframes backdrop-exit{from{opacity:1}to{opacity:0}}
+body,.card,.settings-section,.transaction,.bottom-nav,dialog,input,textarea,select{transition:background-color var(--motion-duration) var(--motion-ease),color var(--motion-duration) var(--motion-ease),border-color var(--motion-duration) var(--motion-ease)}
+.pull-refresh{transition:transform var(--motion-duration) var(--motion-ease),opacity var(--motion-duration) var(--motion-ease)}
+button:active:not(:disabled){transform:scale(.98)}
+button{transition:background-color 180ms var(--motion-ease),color 180ms var(--motion-ease),transform 180ms var(--motion-ease)}
+.pull-refresh.visible{transform:translate(-50%,var(--pull-offset,0px))}.pull-refresh.dragging{transition:opacity var(--motion-duration) var(--motion-ease)}

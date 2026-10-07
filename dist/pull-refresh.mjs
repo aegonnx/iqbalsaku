@@ -2,10 +2,11 @@ export function installPullRefresh({refresh,isBlocked=()=>false,window:win=windo
  const indicator=doc.createElement('div');
  indicator.className='pull-refresh';indicator.setAttribute('role','status');indicator.setAttribute('aria-live','polite');
  indicator.innerHTML='<span class="refresh-spinner" aria-hidden="true"></span><span class="sr-only"></span>';
- const label=text=>{indicator.setAttribute('aria-label',text);const node=indicator.querySelector?.('.sr-only');if(node)node.textContent=text;};
+ let previousLabel='';
+ const label=text=>{if(text===previousLabel)return;previousLabel=text;indicator.setAttribute('aria-label',text);const node=indicator.querySelector?.('.sr-only');if(node)node.textContent=text;};
  doc.body.append(indicator);
  let start=null,distance=0,refreshing=false,timer;
- const clear=()=>{start=null;distance=0;indicator.classList.remove('visible');};
+ const clear=()=>{start=null;distance=0;indicator.classList.remove('visible');indicator.classList.remove('dragging');indicator.style?.removeProperty('--pull-offset');};
  const blocked=target=>isBlocked()||Boolean(target?.closest?.('input,textarea,select,button,dialog'));
  const begin=event=>{
   if(refreshing||win.scrollY>0||event.touches.length!==1||blocked(event.target))return;
@@ -19,6 +20,8 @@ export function installPullRefresh({refresh,isBlocked=()=>false,window:win=windo
   if(dy<12)return;
   if(event.cancelable)event.preventDefault();
   distance=Math.min(dy,150);
+  indicator.classList.add('dragging');
+  indicator.style?.setProperty('--pull-offset',Math.min(0,-48+distance*.5)+'px');
   label(distance>=90?'Release to refresh':'Pull down to refresh');
   indicator.classList.add('visible');
  };
@@ -26,6 +29,7 @@ export function installPullRefresh({refresh,isBlocked=()=>false,window:win=windo
   if(refreshing)return;
   const ready=start&&distance>=90&&!isBlocked();start=null;distance=0;
   if(!ready){clear();return;}
+  indicator.classList.remove('dragging');indicator.style?.removeProperty('--pull-offset');
   refreshing=true;label('Refreshing');indicator.classList.add('visible');
   try{await refresh();label('Updated');}
   catch{label('Could not refresh. Pull down to retry.');}

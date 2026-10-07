@@ -52,3 +52,11 @@ Account data is cached under a separate IndexedDB key for offline use. Signing o
 
 On touch screens, pull down at the top of a page and release to refresh the current expense data and sync online. Refresh is disabled while entering an expense or saving.
 Editing dialogs keep Save and Delete in a footer outside the scrolling fields. Settings save controls stay above navigation, and Visual Viewport resizing keeps controls within the visible area when a phone keyboard opens. Keyboard layout was verified with a simulated viewport; actual iPhone and Android keyboards still need device testing.
+
+## Motion and mobile interaction
+
+Dialogs use one native autofocus step during the user's tap, with 240 ms entry and 180 ms exit animations. Exit completion controls dismissal instead of an arbitrary timeout. Keyboard geometry writes are coalesced once per animation frame and unchanged values are skipped. Save and Delete remain outside the scrolling fields; a second open or submit cannot replace a draft or duplicate a save.
+
+Navigation, disclosures, theme colors, and pull-refresh use restrained 180–240 ms motion. Theme switching retains focus, settings retain their expanded section after saving, and reduced-motion users get immediate dialogs and disclosures. `dist/motion.mjs` manages these transitions.
+
+`tests/motion-browser.cjs` runs isolated mobile Chromium checks at 320, 390, and 430 pixels in both themes, with simulated keyboard viewport changes and reduced motion. `tests/cloud-browser.cjs` covers the complete expense and simulated Supabase workflow. These scripts use the local bundled Playwright installation; they do not access a user's browser data. Actual iOS Safari and Android keyboard motion still require testing on physical devices.
