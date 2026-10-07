@@ -202,3 +202,5 @@ dialog::backdrop{background:#020617a6}
 
 /* Distinct expense cards against the white page. */
 :root:not([data-theme="dark"]) .date-group .transaction{background:var(--expense-surface);border:1px solid var(--expense-border);border-radius:16px;margin-top:12px;padding:16px 12px}
+
+.sync-banner{font-size:14px;color:var(--muted);padding:0 4px 14px;line-height:1.5}.account-email{overflow-wrap:anywhere}.sync-conflict{margin-top:16px}.sync-conflict[hidden]{display:none}

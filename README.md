@@ -1,6 +1,6 @@
 # Iqbal Saku
 
-A simple mobile expense tracker with Read, Add, and Analyze screens. Vanilla HTML, CSS, and JavaScript; no runtime dependencies.
+A simple mobile expense tracker with Read, Add, and Analyze screens. Vanilla HTML, CSS, and JavaScript; the official Supabase client is bundled locally for sign-in and sync.
 
 ## Run locally
 
@@ -19,7 +19,7 @@ Requires Node.js 20 or newer. Run `npm start`, then open `http://localhost:4173`
 
 This public version starts with no expenses, historical summaries, or budgets. Configure budgets in Settings or import your own JSON backup. Personal backups are not included in this repository.
 
-Expenses persist in IndexedDB on each device. This release has no login or cloud synchronization. Hosting makes the app reachable online, but does not move your expenses into a shared database. Use regular browsing and keep JSON backups; clearing website data or ending a private browsing session can remove local records.
+Expenses persist in IndexedDB on each device. Sign in through Settings to sync through Supabase. Signed-out device data stays separate from account data. Import a JSON backup after signing in to move your records into the account. Use regular browsing and keep JSON backups; clearing website data or ending a private browsing session can remove local records.
 
 ## Cloudflare Pages
 
@@ -38,4 +38,14 @@ Run `npm test` for calculations, expense changes, month changes, and backup vali
 - `dist/sw.js`: offline app shell.
 - `server.cjs`: local static preview only.
 
-Cloud synchronization can be added behind the repository boundary later. No private credentials belong in browser assets or Git.
+## Supabase setup
+
+1. Run `supabase/schema.sql` in your project's SQL Editor. It creates the account table, own-account read policy, and authenticated save function with revision checks. Browser users cannot write directly to the table or access other users' records.
+2. In Authentication → URL Configuration, set Site URL and an allowed Redirect URL to `https://iqbalsaku.pages.dev/`.
+3. Enable email/password sign-in. Confirm your email when creating an account. If Supabase's default mail provider cannot deliver to your address, configure custom SMTP or create/confirm your own user in Authentication → Users; never disable data access policies.
+4. `dist/cloud-config.mjs` contains only the project URL and public publishable key. No database password, secret key, or service-role key belongs in browser assets or Git.
+5. Push to GitHub; Cloudflare deploys `dist` unchanged. The official client is already bundled. To rebuild the SDK after updates: `npm install`, then `npm run build:client`.
+6. On each device, sign in to the same account. Import your backup once. Pending offline changes retry online, when the app becomes visible, or every 30 seconds while open. Same-field conflicts require choosing a copy in Settings; the discarded copy downloads as JSON first.
+
+Account data is cached under a separate IndexedDB key for offline use. Signing out switches back to signed-out device data and requires pending changes to finish syncing first. Supabase and email delivery setup still need live verification.
+
