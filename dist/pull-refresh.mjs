@@ -1,6 +1,8 @@
 export function installPullRefresh({refresh,isBlocked=()=>false,window:win=window,document:doc=document}){
  const indicator=doc.createElement('div');
  indicator.className='pull-refresh';indicator.setAttribute('role','status');indicator.setAttribute('aria-live','polite');
+ indicator.innerHTML='<span class="refresh-spinner" aria-hidden="true"></span><span class="sr-only"></span>';
+ const label=text=>{indicator.setAttribute('aria-label',text);const node=indicator.querySelector?.('.sr-only');if(node)node.textContent=text;};
  doc.body.append(indicator);
  let start=null,distance=0,refreshing=false,timer;
  const clear=()=>{start=null;distance=0;indicator.classList.remove('visible');};
@@ -17,17 +19,17 @@ export function installPullRefresh({refresh,isBlocked=()=>false,window:win=windo
   if(dy<12)return;
   if(event.cancelable)event.preventDefault();
   distance=Math.min(dy,150);
-  indicator.textContent=distance>=90?'Release to refresh':'Pull down to refresh';
+  label(distance>=90?'Release to refresh':'Pull down to refresh');
   indicator.classList.add('visible');
  };
  const end=async()=>{
   if(refreshing)return;
   const ready=start&&distance>=90&&!isBlocked();start=null;distance=0;
   if(!ready){clear();return;}
-  refreshing=true;indicator.textContent='Refreshing…';indicator.classList.add('visible');
-  try{await refresh();indicator.textContent='Updated';}
-  catch{indicator.textContent='Could not refresh. Pull down to retry.';}
-  finally{refreshing=false;timer=win.setTimeout(clear,1400);}
+  refreshing=true;label('Refreshing');indicator.classList.add('visible');
+  try{await refresh();label('Updated');}
+  catch{label('Could not refresh. Pull down to retry.');}
+  finally{refreshing=false;timer=win.setTimeout(clear,300);}
  };
  doc.addEventListener('touchstart',begin,{passive:true});
  doc.addEventListener('touchmove',move,{passive:false});

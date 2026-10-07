@@ -11,7 +11,7 @@ Requires Node.js 20 or newer. Run `npm start`, then open `http://localhost:4173`
 - Read shows the remaining monthly budget, a full-width Makan budget card with its recommended daily allowance, and expenses grouped by date.
 - Add expenses from the center button in the bottom navigation. Amount and category are required; description, date, and note are optional details.
 - Analyze shows spending by category and budget status. The settings button contains budgets, categories, quick entries, and backups.
-- All money inputs default to thousands: `500` stores 500,000 and `10` stores 10,000. `10k` also works. The expense unit switch allows full amounts; existing records and backups retain full numeric values. IDR displays with Indonesian separators.
+- All money inputs default to thousands: `500` stores 500,000 and `10` stores 10,000. `10k` also works. The live preview shows the full amount; existing records and backups retain full numeric values. IDR displays with Indonesian separators.
 - The date defaults to the device's local date. Daily recommendations divide the remaining category budget by days after today, or the full period for future months.
 - Selecting a category closes the filter panel while keeping the results filtered. Month labels use Jan, Feb, Sep, Oct, and similar abbreviations.
 
