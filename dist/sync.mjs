@@ -1,4 +1,4 @@
-import {seedState,validateState} from './model.mjs';
+import {seedState,validateState,upgradeState} from './model.mjs';
 
 export function emptyState(){
  const state=seedState();
@@ -63,10 +63,10 @@ export class SyncRepository{
   this.store=store;this.remote=remote;this.key='cloud:'+userId;this.onChange=onChange;this.onStatus=onStatus;this.lock=lock;this.running=null;this.active=true;
  }
  async record(){return await this.store.readRecord(this.key)||{base:emptyState(),revision:0,pending:null};}
- async load(){const record=await this.record();return validateState(record.pending||record.base);}
+ async load(){const record=await this.record();return upgradeState(record.pending||record.base);}
  async save(state){
   if(!this.active)throw new Error('This account was closed. Please retry.');
-  const record=await this.record();record.pending=validateState(state);
+  const record=await this.record();record.pending=upgradeState(state);
   await this.store.writeRecord(this.key,record);
   this.onStatus('pending');
   // The app's write lock must finish before the background sync takes it.

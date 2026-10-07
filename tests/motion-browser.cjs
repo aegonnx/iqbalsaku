@@ -35,22 +35,37 @@ const fs=require('node:fs'),path=require('node:path'),assert=require('node:asser
     assert.equal(await page.evaluate(()=>window.__focus.filter(id=>id==='expense-amount').length),repeat+1);
     await page.evaluate(()=>{for(const value of [800,740,670,580,500,400])window.__keyboard(value);});
     await page.waitForFunction(()=>document.documentElement.style.getPropertyValue('--visible-height')==='400px');
-    const footer=await page.locator('#expense-dialog .dialog-inner>.form-actions').boundingBox();assert.ok(footer.y>=0&&footer.y+footer.height<=421,JSON.stringify({width,theme,footer}));
+    await page.waitForFunction(()=>!document.getElementById('expense-dialog').dataset.motion);
+    for(const [height,top] of [[400,0],[340,0],[360,75]]){
+     await page.evaluate(([height,top])=>window.__keyboard(height,top),[height,top]);
+     await page.waitForFunction(height=>document.documentElement.style.getPropertyValue('--visible-height')===height+'px',height);
+     const geometry=await page.evaluate(()=>{
+      const rect=selector=>{const r=document.querySelector(selector).getBoundingClientRect();return {top:r.top,bottom:r.bottom,height:r.height};};
+      return {category:rect('#expense-category'),amount:rect('#expense-amount'),form:rect('#expense-form'),footer:rect('#expense-dialog .dialog-inner>.form-actions'),scroll:document.getElementById('expense-form').scrollTop};
+     });
+     assert.ok(geometry.category.top>=geometry.form.top&&geometry.category.bottom<=geometry.form.bottom+1,JSON.stringify({width,theme,height,top,geometry}));
+     assert.ok(geometry.category.bottom<=geometry.footer.top&&geometry.footer.bottom<=height+top+1,JSON.stringify(geometry));
+     assert.ok(geometry.category.height>=44&&geometry.amount.height>=44);assert.equal(geometry.scroll,0);
+    }
+    await page.locator('#expense-category').selectOption('snack');
     await page.locator('#expense-dialog [data-close]').tap();await closed(page);await page.evaluate(()=>window.__keyboard(null));
     await page.waitForFunction(()=>!document.documentElement.classList.contains('keyboard-open'));
    }
    assert.equal((await read(page)).transactions.length,0);
    const interrupted=await page.evaluate(async()=>{document.querySelector('.nav-add').click();await new Promise(requestAnimationFrame);const dialog=document.getElementById('expense-dialog');const before=getComputedStyle(dialog).opacity;dialog.querySelector('[data-close]').click();return {before:Number(before),from:Number(dialog.getAnimations()[0].effect.getKeyframes()[0].opacity),phase:dialog.dataset.motion};});
    assert.equal(interrupted.phase,'closing');assert.ok(Math.abs(interrupted.before-interrupted.from)<.01);await closed(page);
-   await page.locator('.nav-add').tap();await page.locator('#expense-amount').fill('500');
+   await page.locator('.nav-add').tap();await page.locator('#expense-amount').fill('500');await page.locator('#expense-category').selectOption('snack');
    await page.evaluate(()=>{const form=document.getElementById('expense-form');form.requestSubmit();form.requestSubmit();});await closed(page);
-   let state=await read(page);assert.equal(state.transactions.length,1);assert.equal(state.transactions[0].amount,500000);
-   await page.locator('.transaction-edit').tap();await page.locator('#expense-amount').fill('501');
+   let state=await read(page);assert.equal(state.transactions.length,1);assert.equal(state.transactions[0].amount,500000);assert.equal(state.transactions[0].categoryId,'snack');
+   await page.locator('.transaction-edit').tap();assert.equal(await page.evaluate(()=>document.activeElement.matches('input,textarea,select')),false);
+   await page.locator('#expense-amount').tap();assert.equal(await page.evaluate(()=>document.activeElement.id),'expense-amount');await page.locator('#expense-amount').fill('501');
    await page.locator('.entry-details summary').first().tap();await page.locator('.entry-details summary').first().tap();await page.locator('[name=date]').fill('2026-10-07');
    await page.evaluate(()=>window.__keyboard(400));await page.waitForFunction(()=>document.documentElement.classList.contains('keyboard-open'));
    await page.locator('[data-submit-form=expense-form]').tap();await closed(page);assert.equal((await read(page)).transactions[0].amount,501000);
    await page.evaluate(()=>window.__keyboard(null));await page.waitForFunction(()=>!document.documentElement.classList.contains('keyboard-open'));
-   await page.locator('.transaction-edit').tap();await page.locator('[data-delete-expense]').tap();await page.locator('#confirm-dialog').waitFor({state:'visible'});
+   await page.locator('.transaction-edit').tap();assert.equal(await page.evaluate(()=>document.activeElement.matches('input,textarea,select')),false);
+   assert.equal(await page.evaluate(()=>document.documentElement.classList.contains('keyboard-open')),false);
+   await page.locator('[data-delete-expense]').tap();await page.locator('#confirm-dialog').waitFor({state:'visible'});
    await page.evaluate(()=>{const form=document.getElementById('confirm-form');form.requestSubmit();form.requestSubmit();});await closed(page);assert.equal((await read(page)).transactions.length,0);
    await page.locator('.topbar [data-page=settings]').tap();
    const prefs=page.locator('.settings-section').filter({has:page.locator('summary',{hasText:'Preferences'})});await prefs.locator('summary').first().tap();await prefs.locator('[name=defaultBudget]').fill('2500');await prefs.locator('[type=submit]').tap();
@@ -58,7 +73,7 @@ const fs=require('node:fs'),path=require('node:path'),assert=require('node:asser
    await page.waitForFunction(async()=>{const {ExpenseRepository}=await import('./storage.mjs');return (await new ExpenseRepository().load()).settings.defaultBudget===2500000;});assert.equal((await read(page)).settings.defaultBudget,2500000);
    await page.locator('[data-action=theme]').focus();await page.locator('[data-action=theme]').press('Enter');await page.waitForFunction(()=>document.activeElement?.dataset.action==='theme');assert.equal(await page.evaluate(()=>document.documentElement.dataset.theme),theme==='light'?'dark':'light');
    await page.locator('.bottom-nav [data-page=reports]').tap();await page.locator('.bottom-nav [data-page=transactions]').tap();assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
-   console.log(`PASS ${width}px ${theme}: single focus, repeated open/close, keyboard geometry, duplicate-save prevention, edit/delete, disclosures and navigation`);
+   console.log(`PASS ${width}px ${theme}: Category visible without scrolling at 340–400px keyboard heights, Snack save, Edit without autofocus, keyboard after tapping amount, direct Delete, motion and navigation`);
   }finally{await context.close();}
  }
  const {context,page}=await create(390,'light',true);

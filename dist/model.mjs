@@ -1,8 +1,8 @@
 export const VERSION = 1;
-export const categoryNames = ['Makan','Dating','Kebutuhan Rumah','Transport','Sosial / Entertainment','Peralatan Kerja','Bantu Ibu','Lain-lain','Paket Data','Sedekah / Sosial'];
-export const categoryIds = ['makan','dating','rumah','transport','entertainment','kerja','ibu','lain','data','sedekah'];
-export const categoryIcons = ['utensils','heart','home','car','sparkles','briefcase','hand','grid','phone','gift'];
-export const categoryColors = ['#63856e','#ab7e91','#8698ad','#6b89ab','#b49769','#7a829f','#659895','#919aa8','#818eaf','#9d9981'];
+export const categoryNames = ['Makan','Snack','Dating','Kebutuhan Rumah','Transport','Sosial / Entertainment','Peralatan Kerja','Bantu Ibu','Lain-lain','Paket Data','Sedekah / Sosial'];
+export const categoryIds = ['makan','snack','dating','rumah','transport','entertainment','kerja','ibu','lain','data','sedekah'];
+export const categoryIcons = ['utensils','utensils','heart','home','car','sparkles','briefcase','hand','grid','phone','gift'];
+export const categoryColors = ['#63856e','#b49769','#ab7e91','#8698ad','#6b89ab','#b49769','#7a829f','#659895','#919aa8','#818eaf','#9d9981'];
 export function id() { return crypto.randomUUID(); }
 export function localDate(date = new Date()) { return [date.getFullYear(),String(date.getMonth()+1).padStart(2,'0'),String(date.getDate()).padStart(2,'0')].join('-'); }
 export function parseAmount(raw) {
@@ -15,9 +15,21 @@ export function parseAmount(raw) {
   return Number.isSafeInteger(n) && n >= 0 && n <= 1000000000000 ? n : NaN;
 }
 export function seedState() {
-  return {version:VERSION,settings:{currency:'IDR',startDay:1,defaultBudget:0},
+  return {version:VERSION,categoryDefaultsVersion:1,settings:{currency:'IDR',startDay:1,defaultBudget:0},
     categories:categoryIds.map((key,i)=>({id:key,name:categoryNames[i],icon:categoryIcons[i],color:categoryColors[i]})),
     transactions:[],budgets:{},summaries:{},quickExpenses:[]};
+}
+export function upgradeState(raw) {
+  const state=validateState(raw);
+  if(state.categoryDefaultsVersion>=1)return state;
+  if(state.categories.length<100&&!state.categories.some(c=>c.id==='snack'||c.name.toLowerCase()==='snack')){
+    const index=state.categories.findIndex(c=>c.id==='makan');
+    state.categories.splice(index<0?state.categories.length:index+1,0,{id:'snack',name:'Snack',icon:'utensils',color:'#b49769'});
+  }
+  // Saved with the next edit, so a deleted or renamed default stays that way.
+  // Return a copy: the exact cloud baseline must remain intact for merging.
+  state.categoryDefaultsVersion=1;
+  return state;
 }
 export function period(month,startDay=1) {
   const [y,m] = month.split('-').map(Number);

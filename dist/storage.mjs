@@ -1,4 +1,4 @@
-import {seedState,validateState} from './model.mjs';
+import {seedState,upgradeState} from './model.mjs';
 const DB_NAME='saku-expenses-v1';
 export class ExpenseRepository {
   constructor(){this.db=null;}
@@ -8,11 +8,11 @@ export class ExpenseRepository {
   }
   async load(){
     const state=await this.readRecord('current');
-    if(state)return validateState(state);
+    if(state)return upgradeState(state);
     const initial=seedState();await this.save(initial);return initial;
   }
   async save(state){
-    const clean=validateState(state);
+    const clean=upgradeState(state);
     await this.writeRecord('current',clean);
   }
   async readRecord(key){
