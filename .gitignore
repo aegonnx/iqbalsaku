@@ -1,0 +1,11 @@
+node_modules/
+.env
+.env.*
+!.env.example
+output/
+tmp/
+*.log
+*.zip
+*.pdf
+saku-backup-*.json
+iqbal-saku-backup-*.json

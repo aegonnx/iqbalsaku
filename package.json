@@ -1,0 +1,8 @@
+{
+ "name":"iqbal-saku",
+ "version":"1.0.0",
+ "private":true,
+ "description":"A simple mobile expense tracker with local storage",
+ "scripts":{"start":"node server.cjs","test":"node --test tests/model.test.mjs"},
+ "engines":{"node":">=20"}
+}
