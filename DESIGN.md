@@ -18,17 +18,17 @@ Problems addressed: equal visual weight across unrelated cards; large tinted bal
 - Analyze: total spending and budget position, two-column daily guidance, a segmented category chart with matching percentages and amounts, budget guidance and expandable biggest expenses.
 - Settings: quiet collapsed surfaces, bordered expanded sections, sticky save controls.
 - Add/Edit: native bottom sheet, prominent amount, immediately reachable category, optional details, stable Save/Delete footer. Existing visualViewport behavior remains authoritative.
-- Navigation: floating compact dock with three established actions and a prominent center Add control. Safe-area spacing remains explicit.
+- Navigation: full-width bar anchored flush to the bottom with three established actions and a prominent center Add control. Bottom padding includes the device safe area; the bar hides during keyboard entry.
 
 ## Tokens and typography
 
 `dist/design.css` owns the redesign layer. `dist/styles.css` retains the existing interaction and keyboard rules.
 
-Light: white canvas, #202b28 text, #5b6964 secondary text, #23745b jade controls, pale green-gray grouped surfaces. Dark: #141a19 canvas, #edf2ee text, #b0bdb5 secondary text, #8cd4ae controls. Caution and danger colors communicate real budget states; chart colors are tonal jade variations and always accompanied by numeric labels.
+Light: white canvas, #202b28 text, #5b6964 secondary text, #23745b jade controls, pale green-gray grouped surfaces. Dark: #141a19 canvas, #edf2ee text, #b0bdb5 secondary text, #8cd4ae controls. Caution and danger colors communicate real budget states. At the user's request, categories use distinct green, amber, rose, blue, teal, purple and other coordinated colors with tinted icons and matching chart segments. Labels and numbers accompany colors. Category colors stay stable through reordering, and custom categories receive a stable color based on their ID.
 
 Work Sans is the UI and heading voice; Outfit supplies balance and major numeric displays and the established wordmark. Use medium and semibold weights, tabular numerals and restrained negative tracking. Currency prefixes are visually subordinate without changing accessible amount text.
 
-Radius scale: 10 px category icons, 12 px inputs and expense rows, 16 px grouped surfaces, 20 px dock, 24 px bottom sheet. Shadows are confined to floating navigation and dialogs, tinted green-gray. Focus remains visible. No decorative imagery, fake records, new metrics or claims.
+Radius scale: 10 px category icons, 12 px inputs and expense rows, 16 px grouped surfaces, 24 px bottom sheet. Bottom navigation has square edges and a top divider. Shadows are confined to menus and dialogs, tinted green-gray. Focus remains visible. No decorative imagery, fake records, new metrics or claims.
 
 ## Verification boundaries
 

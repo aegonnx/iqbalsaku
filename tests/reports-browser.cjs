@@ -25,6 +25,10 @@ const fs=require('node:fs'),path=require('node:path'),assert=require('node:asser
   assert.equal(await page.locator('.report-total').textContent(),'Rp60.000');
   assert.equal(await page.locator('.spending-strip>span').count(),3);
   assert.deepEqual(await page.locator('.category-share small').allTextContents(),['50.0%','33.3%','16.7%']);
+  const categoryColors=await page.locator('.spending-strip>span').evaluateAll(nodes=>nodes.map(node=>getComputedStyle(node).backgroundColor));assert.equal(new Set(categoryColors).size,3);
+  const footer=await page.locator('.bottom-nav').boundingBox();assert.equal(footer.y+footer.height,844);assert.equal(footer.width,320);
+  await page.evaluate(async()=>{const {ExpenseRepository}=await import('./storage.mjs'),repo=new ExpenseRepository(),s=await repo.load();s.categories.reverse();await repo.save(s);});
+  await page.reload();await page.locator('.spending-strip').waitFor();assert.deepEqual(await page.locator('.spending-strip>span').evaluateAll(nodes=>nodes.map(node=>getComputedStyle(node).backgroundColor)),categoryColors);
   assert.equal(await page.locator('.report-budget-foot').textContent(),'60.0% usedRp40.000 left');
   await page.locator('[data-page=transactions]').tap();assert.equal(await page.locator('[data-testid=remaining]').textContent(),'Rp40.000');
   const card=await page.locator('.simple-budget-row').boundingBox(),balance=await page.locator('.simple-balance').boundingBox();assert.equal(card.width,balance.width);

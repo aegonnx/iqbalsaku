@@ -1,4 +1,4 @@
-import {seedState,metrics,budgetFor,budgetState,localDate,expenseMonth,validateExpense,validateState,upgradeState,csv,id,period} from './model.mjs';
+import {seedState,metrics,budgetFor,budgetState,localDate,expenseMonth,validateExpense,validateState,upgradeState,csv,id,period,categoryIds} from './model.mjs';
 import {amountText,amountFromInput} from './amount-input.mjs';
 import {ExpenseRepository} from './storage.mjs';
 import {pinDialogActions,installKeyboardLayout,installFooterActions} from './mobile-layout.mjs';
@@ -46,7 +46,8 @@ function displayMoney(n){const value=format(n);return state.settings.currency===
 function monthName(value=month){const [y,m]=value.split('-').map(Number);return new Intl.DateTimeFormat('en-US',{month:'short',year:'numeric'}).format(new Date(y,m-1,1));}
 function shortDate(value){const date=new Date(value+'T12:00:00');return date.getDate()+' '+new Intl.DateTimeFormat('en-US',{month:'short'}).format(date);}
 function cat(key){return state.categories.find(c=>c.id===key);}
-function categoryIcon(key){const c=cat(key);return '<span class="category-icon '+e(key)+'">'+icon(c?.icon||'grid')+'</span>';}
+function categoryTone(key){const index=categoryIds.indexOf(key);if(index>=0)return index+1;let hash=0;for(const ch of key)hash=(hash*31+ch.charCodeAt(0))>>>0;return hash%11+1;}
+function categoryIcon(key){const c=cat(key);return '<span class="category-icon '+e(key)+'" style="--category-color:'+themeColor(key)+'">'+icon(c?.icon||'grid')+'</span>';}
 function options(selected,withAll=false){return (withAll?'<option value="">All categories</option>':'')+state.categories.map(c=>'<option value="'+e(c.id)+'" '+(selected===c.id?'selected':'')+'>'+e(c.name)+'</option>').join('');}
 function notify(text){const toast=document.getElementById('toast');toast.textContent=text;toast.classList.add('visible');clearTimeout(toastTimer);toastTimer=setTimeout(()=>toast.classList.remove('visible'),3000);}
 function errorMessage(err){return err?.name==='QuotaExceededError'?'Your device storage is full. Export a backup and free some space, then retry.':err?.message||'Could not save. Your changes have not been applied. Please retry.';}
@@ -68,7 +69,7 @@ function budgetItem(key,m){
 function transactionRow(t,showDate=false){
  return '<div class="transaction">'+categoryIcon(t.categoryId)+'<div class="transaction-info"><div class="transaction-title">'+e(t.description)+'</div><div class="transaction-meta">'+e(cat(t.categoryId)?.name)+(showDate?' · '+shortDate(t.date):'')+(t.note?' · '+e(t.note):'')+'</div></div><div class="transaction-amount">'+format(t.amount)+'</div><button class="transaction-edit" data-action="edit" data-id="'+e(t.id)+'" aria-label="Edit '+e(t.description)+'">'+icon('edit')+'</button></div>';
 }
-function themeColor(key){return 'var(--chart-'+((state.categories.findIndex(c=>c.id===key)%6)+1)+')';}
+function themeColor(key){return 'var(--category-'+categoryTone(key)+')';}
 function distribution(m,all=false){
  const ordered=state.categories.slice().sort((a,b)=>(m.categories[b.id]||0)-(m.categories[a.id]||0));
  return ordered.filter(c=>(m.categories[c.id]||0)>0).map(c=>{const amount=m.categories[c.id]||0;const pct=m.spent?amount/m.spent*100:0;return '<div class="distribution-row"><div class="distribution-label"><span><i class="legend-dot" style="background:'+themeColor(c.id)+'"></i>'+e(c.name)+'</span><strong>'+format(amount)+'</strong></div><div class="progress"><span style="width:'+pct+'%;background:'+themeColor(c.id)+'"></span></div>'+(all?'<small>'+pct.toFixed(1)+'% of spending</small>':'')+'</div>';}).join('')||'<div class="empty">No spending yet this month.</div>';
