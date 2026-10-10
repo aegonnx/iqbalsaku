@@ -80,4 +80,4 @@ Keep readable text, large touch targets, visible focus, clear labels, and both-t
 
 - No shared landing-page or showcase-page build-workflow preference is recorded. App screens are built directly in code.
 - No public commercial positioning, pricing, or broader audience has been established.
-- No new visual-world or redesign decision is part of this initialization. Preserve the existing implementation when refining it.
+- The user requested a noticeable visual redesign using Taste on October 10, 2026. DESIGN.md records the new white, graphite and jade mobile interface while preserving product behavior.
