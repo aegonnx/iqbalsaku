@@ -29,10 +29,11 @@ const fs=require('node:fs'),path=require('node:path'),assert=require('node:asser
   const {context,page}=await create(width,theme);
   try{
    for(let repeat=0;repeat<3;repeat++){
+    const priorFocus=await page.evaluate(()=>window.__focus.filter(id=>id==='expense-amount').length);
     await page.locator('.nav-add').tap();await page.waitForFunction(()=>document.getElementById('expense-dialog').open);
     assert.equal(await page.evaluate(()=>document.activeElement.id),'expense-amount');
     await page.locator('#expense-amount').fill('500');await page.evaluate(()=>document.querySelector('.nav-add').click());assert.equal(await page.locator('#expense-amount').inputValue(),'500');
-    assert.equal(await page.evaluate(()=>window.__focus.filter(id=>id==='expense-amount').length),repeat+1);
+    assert.equal(await page.evaluate(()=>window.__focus.filter(id=>id==='expense-amount').length),priorFocus+1);
     await page.evaluate(()=>{for(const value of [800,740,670,580,500,400])window.__keyboard(value);});
     await page.waitForFunction(()=>document.documentElement.style.getPropertyValue('--visible-height')==='400px');
     await page.waitForFunction(()=>!document.getElementById('expense-dialog').dataset.motion);
@@ -48,6 +49,12 @@ const fs=require('node:fs'),path=require('node:path'),assert=require('node:asser
      assert.ok(geometry.category.height>=44&&geometry.amount.height>=44);assert.equal(geometry.scroll,0);
     }
     await page.locator('#expense-category').selectOption('snack');
+    const details=await page.locator('[data-expense-details]').boundingBox();assert.ok(details.height>=44&&details.width>=44);
+    await page.locator('[data-expense-details]').tap();assert.equal(await page.locator('#expense-dialog').evaluate(el=>el.classList.contains('details-mode')),true);
+    await page.locator('#expense-description').fill('Optional keyboard test');
+    const optional=await page.locator('#expense-description').boundingBox(),actions=await page.locator('#expense-dialog .dialog-inner>.form-actions').boundingBox();
+    assert.ok(optional.y+optional.height<=actions.y);
+    await page.locator('[data-expense-details]').tap();assert.equal(await page.evaluate(()=>document.activeElement.id),'expense-amount');
     await page.locator('#expense-dialog [data-close]').tap();await closed(page);await page.evaluate(()=>window.__keyboard(null));
     await page.waitForFunction(()=>!document.documentElement.classList.contains('keyboard-open'));
    }
@@ -72,7 +79,8 @@ const fs=require('node:fs'),path=require('node:path'),assert=require('node:asser
    await page.waitForFunction(()=>[...document.querySelectorAll('.settings-section[open]>summary')].some(summary=>summary.textContent==='Preferences'));
    await page.waitForFunction(async()=>{const {ExpenseRepository}=await import('./storage.mjs');return (await new ExpenseRepository().load()).settings.defaultBudget===2500000;});assert.equal((await read(page)).settings.defaultBudget,2500000);
    await page.locator('[data-action=theme]').focus();await page.locator('[data-action=theme]').press('Enter');await page.waitForFunction(()=>document.activeElement?.dataset.action==='theme');assert.equal(await page.evaluate(()=>document.documentElement.dataset.theme),theme==='light'?'dark':'light');
-   await page.locator('.bottom-nav [data-page=reports]').tap();await page.locator('.bottom-nav [data-page=transactions]').tap();assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
+   await page.locator('.bottom-nav [data-page=reports]').focus();await page.keyboard.press('Enter');assert.equal(await page.evaluate(()=>document.activeElement.id),'page-title');
+   await page.locator('.bottom-nav [data-page=transactions]').tap();assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
    console.log(`PASS ${width}px ${theme}: Category visible without scrolling at 340–400px keyboard heights, Snack save, Edit without autofocus, keyboard after tapping amount, direct Delete, motion and navigation`);
   }finally{await context.close();}
  }

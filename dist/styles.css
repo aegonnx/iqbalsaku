@@ -217,6 +217,10 @@ dialog .expense-form,dialog .confirm-form{min-height:0;overflow-y:auto;overscrol
 #expense-dialog .expense-form{display:flex;flex-direction:column;gap:12px;overflow:hidden}
 .expense-core{display:grid;gap:16px;flex-shrink:0}
 .expense-options{min-height:0;overflow-y:auto;overscroll-behavior:contain;scroll-padding-block:8px}
+.history-pagination{display:grid;gap:12px;text-align:center;font-size:.875rem}
+.dialog-header-actions{display:flex;align-items:center;gap:4px;flex-shrink:0}
+[data-expense-details]{display:none}
+#main-content>.heading-row{margin-bottom:4px}
 .amount-label{margin-bottom:8px}
 .expense-options .error-message:not(:empty){margin-top:8px}
 dialog .confirmation-copy{flex-shrink:0;margin-bottom:16px}
@@ -234,6 +238,12 @@ dialog .dialog-inner>.form-actions{flex-shrink:0;margin-top:16px;padding-top:16p
  .keyboard-open #expense-dialog .dialog-inner{max-height:calc(var(--visible-height,100dvh) - 8px);padding:8px 16px}
  .keyboard-open #expense-dialog .dialog-header{margin-bottom:4px}
  .keyboard-open #expense-dialog .dialog-header h2{font-size:1.25rem}
+ .keyboard-open #expense-dialog [data-expense-details]{display:inline-flex;align-items:center;justify-content:center}
+ .keyboard-open #expense-dialog:not(.details-mode) .expense-options{display:none}
+ .keyboard-open #expense-dialog.details-mode .expense-core{display:none}
+ .keyboard-open #expense-dialog.details-mode .expense-options{flex:1}
+ .keyboard-open #expense-dialog:not(.details-mode) .amount-field:has(.error-message:not(:empty)) .amount-preview{display:none}
+ .keyboard-open #expense-dialog .amount-field .error-message{max-height:42px;overflow-y:auto}
  .keyboard-open #expense-dialog .expense-form{gap:4px}
  .keyboard-open .expense-core{gap:8px}
  .keyboard-open .amount-label{font-size:.875rem;line-height:20px;margin-bottom:4px}

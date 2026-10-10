@@ -57,6 +57,12 @@ Editing dialogs keep Save and Delete in a footer outside the scrolling fields. S
 
 Dialogs use one native autofocus step during the user's tap, with 240 ms entry and 180 ms exit animations. Exit completion controls dismissal instead of an arbitrary timeout. Keyboard geometry writes are coalesced once per animation frame and unchanged values are skipped. Save and Delete remain outside the scrolling fields; a second open or submit cannot replace a draft or duplicate a save.
 
+Edit opens without activating the keyboard. With the keyboard open, the header's Details button exposes description, date, note, and recent suggestions in a separate scrolling area; Amount returns to the essential fields. Dialogs have accessible names, navigation focuses the page heading, and replacement renders restore relevant same-page focus. Page titles and month controls are inside the main landmark.
+
+Large histories render 60 matching expenses initially. Show more expenses loads another 60; search, category, and month changes reset the batch. Daily totals and monthly budgets always include all applicable records, including those not yet rendered. Search reuses a sorted text index and groups matches in one pass.
+
 Navigation, disclosures, theme colors, and pull-refresh use restrained 180–240 ms motion. Theme switching retains focus, settings retain their expanded section after saving, and reduced-motion users get immediate dialogs and disclosures. `dist/motion.mjs` manages these transitions.
 
 `tests/motion-browser.cjs` runs isolated mobile Chromium checks at 320, 390, and 430 pixels in both themes, with simulated keyboard viewport changes and reduced motion. `tests/cloud-browser.cjs` covers the complete expense and simulated Supabase workflow. These scripts use the local bundled Playwright installation; they do not access a user's browser data. Actual iOS Safari and Android keyboard motion still require testing on physical devices.
+
+`tests/hardening-browser.cjs` checks history pagination and complete totals, filter resets, named dialogs, deleting without opening the keyboard, and inline amount-error recovery. PRODUCT.md records the confirmed product scope for future UI work; .impeccable/live/config.json targets the local app shell without injecting anything into production.

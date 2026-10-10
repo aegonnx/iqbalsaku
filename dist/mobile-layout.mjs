@@ -10,7 +10,7 @@ export function pinDialogActions(dialog,formId){
 export function installFooterActions(){
  document.addEventListener('pointerdown',event=>{
   // Keep the keyboard and footer stationary through the tap's click event.
-  if(event.target.closest('.form-actions button')&&document.activeElement?.matches('input,textarea,select'))event.preventDefault();
+  if(event.target.closest('.form-actions button,[data-expense-details]')&&document.activeElement?.matches('input,textarea,select'))event.preventDefault();
  });
  document.addEventListener('click',event=>{
   const button=event.target.closest('[data-submit-form]');

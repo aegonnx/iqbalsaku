@@ -5,9 +5,12 @@ import {pinDialogActions,installKeyboardLayout,installFooterActions} from './mob
 import {openDialog,closeDialog,dialogActive,dialogClosing,animatePage,installDisclosureMotion} from './motion.mjs';
 import {installPullRefresh} from './pull-refresh.mjs';
 import {CloudController} from './cloud-ui.mjs';
+import {indexHistory,historyPage} from './history.mjs';
+import {rememberFocus,restoreFocus} from './focus.mjs';
 const localRepo=new ExpenseRepository();
 let repo=localRepo,cloud;
 let state,month=expenseMonth(localDate()),page=['home','transactions','reports','settings'].includes(location.hash.slice(1))?location.hash.slice(1):'home';
+let historyLimit=60,historyCache;
 let search='',categoryFilter='',busy=false,toastTimer,installPrompt;
 const app=document.getElementById('app'),expenseDialog=document.getElementById('expense-dialog'),confirmDialog=document.getElementById('confirm-dialog');
 const channel=typeof BroadcastChannel!=='undefined'?new BroadcastChannel('saku-data'):null;
@@ -71,9 +74,11 @@ function distribution(m,all=false){
 }
 function home(){ return transactions(); }
 function historyBody(){
- const m=metrics(state,month),query=search.trim().toLocaleLowerCase();const rows=m.rows.filter(t=>(!categoryFilter||t.categoryId===categoryFilter)&&(!query||(t.description+' '+t.note+' '+cat(t.categoryId)?.name).toLocaleLowerCase().includes(query))).sort((a,b)=>b.date.localeCompare(a.date)||String(b.createdAt).localeCompare(String(a.createdAt)));
- const dates=[...new Set(rows.map(t=>t.date))];
- return '<div class="summary-banner"><span>'+rows.length+' '+(rows.length===1?'transaction':'transactions')+(search||categoryFilter?' matching filters':'')+'</span><strong>'+format(rows.reduce((n,t)=>n+t.amount,0))+'</strong></div>'+(m.summary?'<p class="notice">This month has a monthly summary of '+format(m.summary.total)+'. It has no individual transactions to edit. Any transactions you add are counted on top of the summary.</p>':'')+(dates.length?dates.map(date=>{const group=rows.filter(t=>t.date===date);return '<section class="card date-group"><div class="section-head"><h3>'+shortDate(date)+'</h3><span class="daily-total">'+(search||categoryFilter?'Filtered total: ':'Daily total: ')+'<strong>'+format(group.reduce((n,t)=>n+t.amount,0))+'</strong></span></div>'+group.map(t=>transactionRow(t)).join('')+'</section>';}).join(''):'<div class="card empty">'+(search||categoryFilter?'No transactions match your search.':'No individual transactions in this month.')+'</div>');
+ if(!historyCache||historyCache.state!==state||historyCache.month!==month){const m=metrics(state,month);historyCache={state,month,summary:m.summary,index:indexHistory(m.rows,state.categories)};}
+ const result=historyPage(historyCache.index,{search,category:categoryFilter,limit:historyLimit});
+ return (historyCache.summary?'<p class="notice">This month has a monthly summary of '+format(historyCache.summary.total)+'. It has no individual transactions to edit. Any transactions you add are counted on top of the summary.</p>':'')+
+ (result.count?result.groups.map(group=>'<section class="card date-group"><div class="section-head"><h3>'+shortDate(group.date)+'</h3><span class="daily-total">'+(search||categoryFilter?'Filtered total: ':'Daily total: ')+'<strong>'+format(group.total)+'</strong></span></div>'+group.rows.map(t=>transactionRow(t)).join('')+'</section>').join('')+
+ '<div class="history-pagination"><p class="muted" role="status">'+(result.shown<result.count?'Showing '+result.shown+' of '+result.count+' expenses':result.count+' '+(result.count===1?'expense':'expenses'))+'</p>'+(result.shown<result.count?'<button class="secondary full-width" data-action="more-history">Show more expenses</button>':'')+'</div>':'<div class="card empty">'+(search||categoryFilter?'No transactions match your search.':'No individual transactions in this month.')+'</div>');
 }
 function simpleBudget(key,m){
  const amount=m.categories[key]||0,limit=m.budget.categories[key],status=budgetState(amount,limit);
@@ -101,31 +106,37 @@ function settings(){
 }
 function themeButton(){const dark=document.documentElement.dataset.theme==='dark';return '<button class="icon-button" data-action="theme" aria-label="Dark theme" aria-pressed="'+dark+'" title="Switch to '+(dark?'light':'dark')+' theme">'+icon(dark?'sun':'moon')+'</button>';}
 function toggleTheme(button){const theme=document.documentElement.dataset.theme==='dark'?'light':'dark';document.documentElement.dataset.theme=theme;try{localStorage.setItem('iqbal-saku-theme',theme);}catch{}document.querySelector('meta[name="theme-color"]').content=theme==='dark'?'#0f172a':'#ffffff';button.innerHTML=icon(theme==='dark'?'sun':'moon');button.setAttribute('aria-pressed',String(theme==='dark'));button.title='Switch to '+(theme==='dark'?'light':'dark')+' theme';}
-function render(){
+function render({focusPage=false}={}){
+ const previousFocus=rememberFocus(app);
  const expanded=page==='settings'&&app.querySelector('.settings-grid')?new Set([...app.querySelectorAll('.settings-section[open]>summary')].map(node=>node.textContent)):null;
  const title=page==='reports'?'Analyze':page==='settings'?'Settings':'Read';
- app.innerHTML='<div class="app-shell simple-shell"><header class="topbar"><div class="brand"><img src="./icon.svg" alt="">Iqbal Saku</div><div class="topbar-actions">'+themeButton()+'<button class="icon-button" data-action="page" data-page="settings" aria-label="Settings">'+icon('settings')+'</button></div></header><div class="heading-row"><h1>'+title+'</h1><div class="month-control"><button data-action="month" data-direction="-1" aria-label="Previous month">'+icon('left')+'</button><label class="sr-only" for="selected-month">Selected month</label><div class="month-picker"><span aria-hidden="true">'+monthName()+'</span><input id="selected-month" type="month" min="2000-01" max="2100-12" value="'+month+'"></div><button data-action="month" data-direction="1" aria-label="Next month">'+icon('right')+'</button></div></div>'+cloud.banner()+'<main id="main-content" tabindex="-1">'+({home,transactions,reports,settings})[page]()+'</main><nav class="bottom-nav simple-nav" aria-label="Main navigation">'+navButton('transactions','Read','list')+'<button class="nav-add" data-action="add" aria-label="Add Expense">'+icon('plus')+'<span>Add</span></button>'+navButton('reports','Analyze','chart')+'</nav></div>';
+ app.innerHTML='<div class="app-shell simple-shell"><header class="topbar"><div class="brand"><img src="./icon.svg" alt="">Iqbal Saku</div><div class="topbar-actions">'+themeButton()+'<button class="icon-button" data-action="page" data-page="settings" aria-label="Settings">'+icon('settings')+'</button></div></header><main id="main-content" tabindex="-1" aria-labelledby="page-title"><div class="heading-row"><h1 id="page-title" tabindex="-1">'+title+'</h1><div class="month-control"><button data-action="month" data-direction="-1" aria-label="Previous month">'+icon('left')+'</button><label class="sr-only" for="selected-month">Selected month</label><div class="month-picker"><span aria-hidden="true">'+monthName()+'</span><input id="selected-month" type="month" min="2000-01" max="2100-12" value="'+month+'"></div><button data-action="month" data-direction="1" aria-label="Next month">'+icon('right')+'</button></div></div>'+cloud.banner()+({home,transactions,reports,settings})[page]()+'</main><nav class="bottom-nav simple-nav" aria-label="Main navigation">'+navButton('transactions','Read','list')+'<button class="nav-add" data-action="add" aria-label="Add Expense">'+icon('plus')+'<span>Add</span></button>'+navButton('reports','Analyze','chart')+'</nav></div>';
  if(page==='settings'){
   for(const form of app.querySelectorAll('#budget-form,#preferences-form,#categories-form,#quick-form')){const button=[...form.children].find(node=>node.tagName==='BUTTON'&&node.classList.contains('primary'));if(button){button.type='submit';button.textContent='Save changes';const actions=document.createElement('div');actions.className='form-actions settings-actions';button.replaceWith(actions);actions.append(button);}}
   app.querySelectorAll('.settings-grid .card').forEach((card,i)=>{const wrapper=document.createElement('details');wrapper.className='settings-section';const summary=document.createElement('summary');summary.textContent=card.querySelector('h2')?.textContent||'Settings';wrapper.open=expanded?expanded.has(summary.textContent):i===0;card.querySelector('h2')?.remove();card.replaceWith(wrapper);wrapper.append(summary,card);});
  }
+ if(focusPage)document.getElementById('page-title')?.focus({preventScroll:true});
+ else if(previousFocus&&!restoreFocus(app,previousFocus))document.getElementById('page-title')?.focus({preventScroll:true});
 }
 function navButton(key,label,glyph){const active=page===key||(key==='transactions'&&page==='home');return '<button class="nav-item '+(active?'active':'')+'" '+(active?'aria-current="page"':'')+' data-action="page" data-page="'+key+'">'+icon(glyph)+'<span>'+label+'</span></button>';}
-function navigate(key){if(!['home','transactions','reports','settings'].includes(key))return;if(page===key)return;page=key;location.hash=key;render();window.scrollTo({top:0});animatePage(document.getElementById('main-content'));}
-function switchMonth(value){if(!/^(20\d\d|2100)-(0[1-9]|1[0-2])$/.test(value))return;if(month===value)return;month=value;render();animatePage(document.getElementById('main-content'));}
+function navigate(key){if(!['home','transactions','reports','settings'].includes(key))return;if(page===key)return;page=key;historyLimit=60;location.hash=key;render({focusPage:true});window.scrollTo({top:0});animatePage(document.getElementById('main-content'));}
+function switchMonth(value){if(!/^(20\d\d|2100)-(0[1-9]|1[0-2])$/.test(value))return;if(month===value)return;month=value;historyLimit=60;render();animatePage(document.getElementById('main-content'));}
 function openExpense(existing=null,quick=null){
  if(dialogActive(expenseDialog)||dialogActive(confirmDialog)||busy)return;
+ expenseDialog.classList.remove('details-mode');
  const t=existing||{amount:quick?.amount||'',description:quick?.description||'',categoryId:quick?.categoryId||(cat('makan')?'makan':state.categories[0].id),date:localDate(),note:''};
  const recent=state.transactions.slice().sort((a,b)=>String(b.createdAt).localeCompare(String(a.createdAt)));
  const unique=[],seen=new Set();for(const r of recent){if(!seen.has(r.description.toLowerCase())){seen.add(r.description.toLowerCase());unique.push(r);}if(unique.length===4)break;}
- expenseDialog.innerHTML='<div class="dialog-inner"><div class="dialog-header"><h2>'+(existing?'Edit expense':'Add expense')+'</h2><button type="button" class="icon-button" data-close="expense" aria-label="Close">'+icon('close')+'</button></div><form id="expense-form" class="expense-form" data-id="'+e(existing?.id||'')+'"><div class="expense-core"><div class="amount-field"><div class="amount-label"><label for="expense-amount">Amount</label></div><input class="amount-input full-width" id="expense-amount" name="amount" inputmode="decimal" autocomplete="off" placeholder="0" value="'+e(amountText(t.amount))+'" required aria-describedby="amount-preview expense-error" style="border:1px solid var(--control-border);border-radius:12px"><p id="amount-preview" class="amount-preview">'+(t.amount?format(t.amount):'Type 500 for 500.000')+'</p></div><label class="field category-field">Category<select name="categoryId" id="expense-category">'+options(t.categoryId)+'</select></label></div><div class="expense-options"><details class="entry-details" '+(existing?'open':'')+'><summary>More details <span class="muted">(optional)</span></summary><div class="expense-extra"><label class="field">Description<input id="expense-description" name="description" placeholder="Optional, e.g. lunch" maxlength="160" value="'+e(t.description)+'" autocomplete="off"></label><label class="field">Date<input name="date" type="date" value="'+e(t.date)+'" min="2000-01-01" max="2100-12-31" required></label><label class="field">Note<textarea name="note" maxlength="2000" placeholder="Optional">'+e(t.note)+'</textarea></label></div></details><p class="error-message" id="expense-error" role="alert"></p><div class="form-actions">'+(existing?'<button class="secondary danger" type="button" data-delete-expense="'+e(existing.id)+'" aria-label="Delete expense">'+icon('trash')+'</button>':'')+'<button type="submit" class="primary">'+(existing?'Save changes':'Save expense')+'</button></div>'+(!existing&&unique.length?'<details class="entry-details"><summary>Repeat a recent expense</summary><div class="suggestions">'+unique.map(r=>'<button type="button" class="suggestion" data-suggestion="'+e(r.id)+'">'+e(r.description)+' · '+format(r.amount)+'</button>').join('')+'</div></details>':'')+'</div></form></div>';
+ expenseDialog.innerHTML='<div class="dialog-inner"><div class="dialog-header"><h2 id="expense-title">'+(existing?'Edit expense':'Add expense')+'</h2><div class="dialog-header-actions"><button type="button" class="text-button" data-expense-details aria-controls="expense-options" aria-expanded="false">Details</button><button type="button" class="icon-button" data-close="expense" aria-label="Close">'+icon('close')+'</button></div></div><form id="expense-form" class="expense-form" novalidate data-id="'+e(existing?.id||'')+'"><div class="expense-core"><div class="amount-field"><div class="amount-label"><label for="expense-amount">Amount</label></div><input class="amount-input full-width" id="expense-amount" name="amount" inputmode="decimal" autocomplete="off" placeholder="0" value="'+e(amountText(t.amount))+'" required aria-describedby="amount-preview expense-error" style="border:1px solid var(--control-border);border-radius:12px"><p id="amount-preview" class="amount-preview">'+(t.amount?format(t.amount):'Type 500 for 500.000')+'</p><p class="error-message" id="expense-error" role="alert"></p></div><label class="field category-field">Category<select name="categoryId" id="expense-category">'+options(t.categoryId)+'</select></label></div><div id="expense-options" class="expense-options"><details class="entry-details" '+(existing?'open':'')+'><summary>More details <span class="muted">(optional)</span></summary><div class="expense-extra"><label class="field">Description<input id="expense-description" name="description" placeholder="Optional, e.g. lunch" maxlength="160" value="'+e(t.description)+'" autocomplete="off"></label><label class="field">Date<input name="date" type="date" value="'+e(t.date)+'" min="2000-01-01" max="2100-12-31" required></label><label class="field">Note<textarea name="note" maxlength="2000" placeholder="Optional">'+e(t.note)+'</textarea></label></div></details><div class="form-actions">'+(existing?'<button class="secondary danger" type="button" data-delete-expense="'+e(existing.id)+'" aria-label="Delete expense">'+icon('trash')+'</button>':'')+'<button type="submit" class="primary">'+(existing?'Save changes':'Save expense')+'</button></div>'+(!existing&&unique.length?'<details class="entry-details"><summary>Repeat a recent expense</summary><div class="suggestions">'+unique.map(r=>'<button type="button" class="suggestion" data-suggestion="'+e(r.id)+'">'+e(r.description)+' · '+format(r.amount)+'</button>').join('')+'</div></details>':'')+'</div></form></div>';
+ expenseDialog.setAttribute('aria-labelledby','expense-title');
  pinDialogActions(expenseDialog,'expense-form');openDialog(expenseDialog,{focus:existing?expenseDialog.querySelector('[data-close]'):document.getElementById('expense-amount'),select:!existing});
 }
 function entryAmount(){const form=document.getElementById('expense-form');const val=form.elements.amount.value;return amountFromInput(val);}
-function updateAmountPreview(){const amount=entryAmount();document.getElementById('amount-preview').textContent=Number.isFinite(amount)?format(amount):'Enter an amount, e.g. 500 for 500.000.';}
+function updateAmountPreview(){document.getElementById('expense-amount').removeAttribute('aria-invalid');document.getElementById('expense-error').textContent='';const amount=entryAmount();document.getElementById('amount-preview').textContent=Number.isFinite(amount)?format(amount):'Enter an amount, e.g. 500 for 500.000.';}
 function showConfirm(title,copy,fields,action,label='Confirm'){
  if(dialogActive(confirmDialog))return;
- confirmDialog.innerHTML='<div class="dialog-inner"><div class="dialog-header"><h2>'+e(title)+'</h2><button class="icon-button" data-close="confirm" aria-label="Close">'+icon('close')+'</button></div><p class="confirmation-copy">'+e(copy)+'</p><form id="confirm-form" class="confirm-form">'+fields+'<p class="error-message" id="confirm-error" role="alert"></p><div class="form-actions"><button type="button" class="secondary" data-close="confirm">Cancel</button><button class="primary" type="submit">'+e(label)+'</button></div></form></div>';
+ confirmDialog.setAttribute('aria-labelledby','confirm-title');confirmDialog.setAttribute('aria-describedby','confirm-copy');
+ confirmDialog.innerHTML='<div class="dialog-inner"><div class="dialog-header"><h2 id="confirm-title">'+e(title)+'</h2><button class="icon-button" data-close="confirm" aria-label="Close">'+icon('close')+'</button></div><p id="confirm-copy" class="confirmation-copy">'+e(copy)+'</p><form id="confirm-form" class="confirm-form">'+fields+'<p class="error-message" id="confirm-error" role="alert"></p><div class="form-actions"><button type="button" class="secondary" data-close="confirm">Cancel</button><button class="primary" type="submit">'+e(label)+'</button></div></form></div>';
  const form=document.getElementById('confirm-form');
  form.onsubmit=async ev=>{ev.preventDefault();const button=confirmDialog.querySelector('[data-submit-form]');if(button.disabled||dialogClosing(confirmDialog))return;button.disabled=true;try{await action(new FormData(form));await closeDialog(confirmDialog);render();}catch(err){document.getElementById('confirm-error').textContent=errorMessage(err);button.disabled=false;}};
  pinDialogActions(confirmDialog,'confirm-form');openDialog(confirmDialog,{focus:form.querySelector('input:not([type=hidden]),textarea,select')||confirmDialog.querySelector('[data-close]')});
@@ -144,6 +155,7 @@ async function doAction(button){
  const key=button.dataset.id;
  switch(button.dataset.action){
  case 'theme':toggleTheme(button);break;
+ case 'more-history':{historyLimit+=60;document.getElementById('history-list').innerHTML=historyBody();const more=app.querySelector('[data-action=more-history]');if(more)more.focus({preventScroll:true});else{const status=app.querySelector('.history-pagination p');status?.setAttribute('tabindex','-1');status?.focus({preventScroll:true});}break;}
  case 'page':navigate(button.dataset.page);break;
  case 'add':openExpense();break;
  case 'edit':openExpense(state.transactions.find(t=>t.id===key));break;
@@ -163,11 +175,11 @@ async function doAction(button){
 }
 
 app.addEventListener('click',async ev=>{const button=ev.target.closest('[data-action]');if(!button)return;try{await doAction(button);}catch(err){notify(errorMessage(err));}});
-app.addEventListener('input',ev=>{if(ev.target.id==='transaction-search'){search=ev.target.value;document.getElementById('history-list').innerHTML=historyBody();}});
+app.addEventListener('input',ev=>{if(ev.target.id==='transaction-search'){search=ev.target.value;historyLimit=60;document.getElementById('history-list').innerHTML=historyBody();}});
 app.addEventListener('change',async ev=>{
  if(ev.target.id==='selected-month')switchMonth(ev.target.value);
  if(ev.target.id==='category-filter'){
-  categoryFilter=ev.target.value;
+  categoryFilter=ev.target.value;historyLimit=60;
   document.getElementById('history-list').innerHTML=historyBody();
   const menu=ev.target.closest('.filter-menu');
   if(menu){menu.open=false;menu.querySelector('summary')?.focus({preventScroll:true});}
@@ -188,8 +200,21 @@ app.addEventListener('submit',async ev=>{
   render();
  }catch(err){notify(errorMessage(err));if(submit)submit.disabled=false;}
 });
+expenseDialog.addEventListener('focusin',ev=>{
+ if(!ev.target.matches('input,textarea,select'))return;
+ const details=Boolean(ev.target.closest('.expense-options'));
+ expenseDialog.classList.toggle('details-mode',details);
+ const button=expenseDialog.querySelector('[data-expense-details]');
+ button.textContent=details?'Amount':'Details';button.setAttribute('aria-expanded',String(details));
+});
 expenseDialog.addEventListener('input',ev=>{if(ev.target.name==='amount')updateAmountPreview();});
 expenseDialog.addEventListener('click',ev=>{
+ const detailsButton=ev.target.closest('[data-expense-details]');if(detailsButton){
+  const show=expenseDialog.classList.toggle('details-mode');detailsButton.textContent=show?'Amount':'Details';detailsButton.setAttribute('aria-expanded',String(show));
+  if(show){expenseDialog.querySelector('.entry-details').open=true;document.activeElement?.blur();detailsButton.focus({preventScroll:true});}
+  else document.getElementById('expense-amount').focus({preventScroll:true});
+  return;
+ }
  const close=ev.target.closest('[data-close]');if(close){if(!busy&&!expenseDialog.querySelector('[data-submit-form]')?.disabled)closeDialog(expenseDialog);return;}
  const deletion=ev.target.closest('[data-delete-expense]');if(deletion){deleteExpense(deletion.dataset.deleteExpense);return;}
  const suggestion=ev.target.closest('[data-suggestion]');if(suggestion){const t=state.transactions.find(t=>t.id===suggestion.dataset.suggestion);if(!t)return;const form=document.getElementById('expense-form');form.elements.description.value=t.description;form.elements.amount.value=amountText(t.amount);form.elements.categoryId.value=t.categoryId;updateAmountPreview();return;}
@@ -198,12 +223,12 @@ expenseDialog.addEventListener('submit',async ev=>{
  ev.preventDefault();const form=ev.target,data=new FormData(form),button=expenseDialog.querySelector('[data-submit-form]');if(button.disabled||busy||dialogClosing(expenseDialog))return;button.disabled=true;const savedLabel=button.textContent;button.textContent='Saving…';
  try{const existingId=form.dataset.id;const previous=state.transactions.find(t=>t.id===existingId);const t={id:existingId||id(),amount:entryAmount(),description:String(data.get('description')||'').trim()||cat(data.get('categoryId'))?.name||'Expense',categoryId:data.get('categoryId'),date:data.get('date'),note:String(data.get('note')||'').trim(),createdAt:previous?.createdAt||new Date().toISOString()};
  if(!Number.isSafeInteger(t.amount)||t.amount<=0){document.getElementById('expense-amount').setAttribute('aria-invalid','true');throw new Error('Enter a positive amount, e.g. 500 for 500.000.');}validateExpense(t,state);await commit(next=>{if(existingId){const index=next.transactions.findIndex(r=>r.id===existingId);if(index<0)throw new Error('This expense was removed in another tab.');next.transactions[index]=t;}else next.transactions.push(t);});month=expenseMonth(t.date,state.settings.startDay);await closeDialog(expenseDialog);render();notify(existingId?'Expense updated':'Expense saved · '+format(t.amount));}
- catch(err){document.getElementById('expense-error').textContent=errorMessage(err);button.disabled=false;button.textContent=savedLabel;document.getElementById('expense-amount').focus();}
+ catch(err){document.getElementById('expense-error').textContent=errorMessage(err);button.disabled=false;button.textContent=savedLabel;expenseDialog.classList.remove('details-mode');const details=expenseDialog.querySelector('[data-expense-details]');details.textContent='Details';details.setAttribute('aria-expanded','false');document.getElementById('expense-amount').focus();}
 });
 confirmDialog.addEventListener('click',ev=>{if(ev.target.closest('[data-close]')&&!confirmDialog.querySelector('[data-submit-form]')?.disabled)closeDialog(confirmDialog);});
 [expenseDialog,confirmDialog].forEach(dialog=>dialog.addEventListener('cancel',event=>{event.preventDefault();if(!busy&&!dialog.querySelector('[data-submit-form]')?.disabled)closeDialog(dialog);}));
 [expenseDialog,confirmDialog].forEach(dialog=>dialog.addEventListener('click',ev=>{if(ev.target===dialog){const r=dialog.getBoundingClientRect();if(!busy&&!dialog.querySelector('[data-submit-form]')?.disabled&&(ev.clientX<r.left||ev.clientX>r.right||ev.clientY<r.top||ev.clientY>r.bottom))closeDialog(dialog);}}));
-window.addEventListener('hashchange',()=>{const next=location.hash.slice(1);if(['home','transactions','reports','settings'].includes(next)&&next!==page){page=next;render();window.scrollTo({top:0});animatePage(document.getElementById('main-content'));}});
+window.addEventListener('hashchange',()=>{const next=location.hash.slice(1);if(['home','transactions','reports','settings'].includes(next)&&next!==page){page=next;historyLimit=60;render({focusPage:true});window.scrollTo({top:0});animatePage(document.getElementById('main-content'));}});
 channel?.addEventListener('message',async()=>{if(busy)return;try{state=await repo.load();render();}catch(err){notify(errorMessage(err));}});
 window.addEventListener('beforeinstallprompt',ev=>{ev.preventDefault();installPrompt=ev;const button=document.getElementById('install-button');if(button)button.hidden=false;});
 installDisclosureMotion();

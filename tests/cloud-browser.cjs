@@ -46,6 +46,7 @@ const fs=require('node:fs'),path=require('node:path'),assert=require('node:asser
  try{
   const a=await make();await add(a,'10000');
   await a.locator('#budget-form [name=overall]').fill('500');await a.locator('#budget-form [name=budget-makan]').fill('100');await a.locator('#budget-form [type=submit]').click();await a.waitForFunction(()=>document.getElementById('budget-form').elements.overall.value==='500');
+  await a.waitForFunction(async()=>{const {ExpenseRepository}=await import('./storage.mjs');return (await new ExpenseRepository().load()).budgets['2026-10']?.overall===500000;});
   assert.equal(await a.evaluate(async()=>{const {ExpenseRepository}=await import('./storage.mjs');return (await new ExpenseRepository().load()).budgets['2026-10'].overall;}),500000);
   await a.locator('.settings-section').filter({has:a.locator('summary',{hasText:'Quick expenses'})}).locator('summary').first().click();await a.locator('[data-action=new-quick]').click();await a.locator('#confirm-form [name=description]').fill('Test quick expense');await a.locator('#confirm-form [name=amount]').fill('15');await a.locator('button[form=confirm-form]').click();await a.waitForFunction(()=>!document.getElementById('confirm-dialog').open);
   assert.equal(await a.evaluate(async()=>{const {ExpenseRepository}=await import('./storage.mjs');return (await new ExpenseRepository().load()).quickExpenses[0].amount;}),15000);
