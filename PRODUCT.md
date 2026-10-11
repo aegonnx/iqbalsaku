@@ -47,7 +47,7 @@ Success means reliable saving, correct balances after every change, fast entry w
 - Preserve JSON export/import, transaction CSV export, and confirmed reset. Preserve historical monthly summaries without inventing individual dates or transactions.
 - The public build starts empty. Never include personal backups, private financial records, passwords, or secret/service-role keys in public assets or Git.
 - Retain the lightweight existing implementation: static HTML, CSS, JavaScript modules, IndexedDB, and a locally bundled Supabase client. Cloudflare Pages serves the dist directory; no app server is required for hosting.
-- Expense and income entry show amount, category/source, and description immediately, fitting above the open keyboard with the Save button. No Details tap or keyboard dismissal is needed for these fields; date and notes remain optional details.
+- Expense and income entry use two rows: full-width amount first, then category/source on the left and description on the right, fitting above the open keyboard with the Save button. No Details tap or keyboard dismissal is needed for these fields; date and notes remain optional details.
 - Prevent duplicate dialogs and duplicate saves. Pull-to-refresh uses a moving circle and is disabled during expense or income entry, or saving.
 - AI chat is outside the current scope; the user chose to leave it out.
 
