@@ -1,6 +1,23 @@
 # Iqbal Saku
 
-A simple mobile expense tracker with Read, Add, and Analyze screens. Vanilla HTML, CSS, and JavaScript; the official Supabase client is bundled locally for sign-in and sync.
+A personal money hub with two separate apps: **Verse 01 — Expenses** for spending and budgets, and **Verse 02 — Money Plus** for salary, bonuses, and extra income. Vanilla HTML, CSS, and JavaScript; the expense app's official Supabase client is bundled locally for sign-in and sync.
+
+## Choose an app
+
+The homepage offers two choices. Expenses opens at `/expenses.html`; Money Plus opens at `/money-plus.html`. Each app links back home. Existing expense bookmarks such as `/#settings` redirect to the expense page. The installed PWA opens the chooser and caches both apps for offline use. Keep the same hosting domain to preserve existing browser data.
+
+Money Plus has its own IndexedDB database (`saku-money-plus-v1`), separate from expense storage (`saku-expenses-v1`). It never reads expense records or changes expense budgets. Existing expense data and account sync keep their original storage and behavior.
+
+## Money Plus
+
+- Add salary, work bonuses, freelance pay, gifts, refunds, and other income on any date. For example, a Rp500.000 bonus received mid-month is entered as `500`, with source Work bonus and the date received.
+- Amount and source are the essential fields; date defaults to today. Title defaults to the source name, and title/note can be customized. Amounts use the expense app's existing thousand-entry convention with a live rupiah preview.
+- View calendar-month income, salary, extra income (all sources other than Salary), daily totals, and comparison with the previous month. Extra income is part of total income, not an expense budget increase or an available-balance calculation.
+- Edit and delete records, search titles/notes, filter by source, and browse months. History displays 60 matches at a time while totals include every matching record.
+- Overview shows source breakdown, all-time recorded income, JSON backup export/import, and income CSV export. Imports add missing records, skip identical IDs, and ask whether to keep current or backup versions when records differ. Expense backups are rejected.
+- Income saves on the current device and works offline after the site has loaded online. It does not use Supabase account sync. Export JSON backups before clearing browser data or to transfer income between devices.
+
+Run `npm install` to install browser-test tooling. With `npm start` running in another terminal, run `npm run test:money-plus:browser`. Use `npx playwright install chromium` if a browser is not installed, or set `PLAYWRIGHT_EXECUTABLE_PATH` to an installed Chromium browser. The browser tests use synthetic records in isolated browser contexts.
 
 ## Run locally
 
@@ -63,7 +80,7 @@ Large histories render 60 matching expenses initially. Show more expenses loads 
 
 Navigation, disclosures, theme colors, and pull-refresh use restrained 180–240 ms motion. Theme switching retains focus, settings retain their expanded section after saving, and reduced-motion users get immediate dialogs and disclosures. `dist/motion.mjs` manages these transitions.
 
-`tests/motion-browser.cjs` runs isolated mobile Chromium checks at 320, 390, and 430 pixels in both themes, with simulated keyboard viewport changes and reduced motion. `tests/cloud-browser.cjs` covers the complete expense and simulated Supabase workflow. These scripts use the local bundled Playwright installation; they do not access a user's browser data. Actual iOS Safari and Android keyboard motion still require testing on physical devices.
+`tests/motion-browser.cjs` runs isolated mobile Chromium checks at 320, 390, and 430 pixels in both themes, with simulated keyboard viewport changes and reduced motion. `tests/cloud-browser.cjs` covers the complete expense and simulated Supabase workflow. These scripts use Playwright with an installed browser; they do not access a user's browser data. Actual iOS Safari and Android keyboard motion still require testing on physical devices.
 
 `tests/hardening-browser.cjs` checks history pagination and complete totals, filter resets, named dialogs, deleting without opening the keyboard, and inline amount-error recovery. PRODUCT.md records the confirmed product scope for future UI work; .impeccable/live/config.json targets the local app shell without injecting anything into production.
 

@@ -18,6 +18,8 @@ Success means reliable saving, correct balances after every change, fast entry w
 
 ## Operating Context
 
+- The homepage is an app chooser: Verse 01 — Expenses and Verse 02 — Money Plus. The original expense app lives at `/expenses.html`; old root hash bookmarks redirect there. Both apps return to the chooser and remain available offline through the existing PWA.
+- Money Plus lives at `/money-plus.html` and records incoming money separately: salary, work bonuses, freelance pay, gifts, refunds, and other income. It has calendar-month totals, salary/extra totals, source breakdowns, search/filter, editing/deletion, and JSON/CSV backups. It does not change expense budgets or use expense account sync. Income is device-local in its own IndexedDB database.
 - Design primarily for an iPhone-sized screen and one-handed use. Android mobile browsers and desktop browsers must remain usable; larger screens retain the compact phone-oriented flow.
 - The app can be installed as a PWA and used offline after its shell has been cached.
 - The main navigation is Read, Add, and Analyze. Settings are reached through the top settings button.

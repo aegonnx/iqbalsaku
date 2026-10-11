@@ -1,7 +1,7 @@
-const {chromium}=require('C:/Users/Iqbal/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright');
+const {chromium,launchOptions}=require('./browser-runtime.cjs');
 const fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict');
 (async()=>{
- const browser=await chromium.launch({channel:'msedge',headless:true}),dist=path.resolve(__dirname,'../dist');
+ const browser=await chromium.launch(launchOptions),dist=path.resolve(__dirname,'../dist');
  try{for(const theme of ['light','dark']){
   const context=await browser.newContext({viewport:{width:320,height:844},isMobile:true,hasTouch:true,serviceWorkers:'block'});
   await context.addInitScript(theme=>localStorage.setItem('iqbal-saku-theme',theme),theme);
@@ -13,7 +13,7 @@ const fs=require('node:fs'),path=require('node:path'),assert=require('node:asser
    return route.fulfill({contentType:{'.html':'text/html','.mjs':'text/javascript','.css':'text/css','.woff2':'font/woff2','.svg':'image/svg+xml','.png':'image/png'}[path.extname(file)]||'application/json',body:fs.readFileSync(file)});
   });
   const page=await context.newPage(),errors=[];page.on('pageerror',err=>errors.push(err.message));
-  await page.goto('https://reports.test/#reports');await page.locator('.nav-add').waitFor();
+  await page.goto('https://reports.test/expenses.html#reports');await page.locator('.nav-add').waitFor();
   await page.evaluate(async()=>{
    const {seedState}=await import('./model.mjs'),{ExpenseRepository}=await import('./storage.mjs'),s=seedState();
    s.budgets['2026-10']={overall:100000,categories:{makan:40000}};

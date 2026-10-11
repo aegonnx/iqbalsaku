@@ -2,7 +2,7 @@
   "id": "./",
   "name": "Iqbal Saku",
   "short_name": "Iqbal Saku",
-  "description": "A quick, local-first personal expense manager",
+  "description": "Separate expense and income journals for your everyday money",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

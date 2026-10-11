@@ -1,7 +1,7 @@
-const {chromium}=require('C:/Users/Iqbal/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright');
+const {chromium,launchOptions}=require('./browser-runtime.cjs');
 const fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict');
 (async()=>{
- const browser=await chromium.launch({channel:'msedge',headless:true}),dist=path.resolve(__dirname,'../dist');
+ const browser=await chromium.launch(launchOptions),dist=path.resolve(__dirname,'../dist');
  const context=await browser.newContext({viewport:{width:390,height:844},isMobile:true,hasTouch:true,serviceWorkers:'block'});
  try{
   await context.route('**/*',route=>{
@@ -11,7 +11,7 @@ const fs=require('node:fs'),path=require('node:path'),assert=require('node:asser
    const contentType={'.html':'text/html','.mjs':'text/javascript','.css':'text/css','.svg':'image/svg+xml','.woff2':'font/woff2','.png':'image/png'}[path.extname(file)]||'application/json';return route.fulfill({contentType,body:fs.readFileSync(file)});
   });
   const page=await context.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));
-  await page.goto('https://hardening.test/#transactions');await page.locator('.nav-add').waitFor();
+  await page.goto('https://hardening.test/expenses.html#transactions');await page.locator('.nav-add').waitFor();
   await page.evaluate(async()=>{
    const {seedState}=await import('./model.mjs'),{ExpenseRepository}=await import('./storage.mjs');const state=seedState();
    state.budgets['2026-10']={overall:2500000,categories:{makan:800000}};

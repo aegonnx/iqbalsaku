@@ -1,7 +1,7 @@
-const {chromium}=require('C:/Users/Iqbal/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright');
+const {chromium,launchOptions}=require('./browser-runtime.cjs');
 const fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict');
 (async()=>{
- const browser=await chromium.launch({channel:'msedge',headless:true});
+ const browser=await chromium.launch(launchOptions);
  const rows=new Map(),dist=path.resolve(__dirname,'../dist');let offline=false;
  const jwt=id=>['eyJhbGciOiJIUzI1NiJ9',Buffer.from(JSON.stringify({sub:id,exp:Math.floor(Date.now()/1000)+3600})).toString('base64url'),'test'].join('.');
  const user=id=>({id,email:id+'@example.test',aud:'authenticated',role:'authenticated',created_at:new Date().toISOString()});
@@ -39,7 +39,7 @@ const fs=require('node:fs'),path=require('node:path'),assert=require('node:asser
    return route.abort();
   });return c;
  }
- const contexts=[],errors=[];const make=async()=>{const c=await context();contexts.push(c);const p=await c.newPage();p.on('pageerror',e=>errors.push(e.message));await p.goto('https://saku-sync.test/#settings');await p.locator('[data-action=cloud-signin]').waitFor();return p;};
+ const contexts=[],errors=[];const make=async()=>{const c=await context();contexts.push(c);const p=await c.newPage();p.on('pageerror',e=>errors.push(e.message));await p.goto('https://saku-sync.test/expenses.html#settings');await p.locator('[data-action=cloud-signin]').waitFor();return p;};
  const signIn=async(p,id)=>{await p.locator('[data-action=cloud-signin]').click();await p.locator('#confirm-form [name=email]').fill(id+'@example.test');await p.locator('#confirm-form [name=password]').fill('synthetic-password');await p.locator('button[form=confirm-form]').click();await p.locator('[data-action=cloud-sync]').waitFor();await p.waitForFunction(()=>!document.getElementById('confirm-dialog').open);};
  const sync=async p=>{await p.locator('[data-action=cloud-sync]').click();await p.waitForFunction(()=>[...document.querySelectorAll('[data-sync-status]')].some(n=>n.textContent==='Synced online'));};
  const add=async(p,amount)=>{await p.locator('.nav-add').click();await p.locator('#expense-amount').fill(String(Number(amount)/1000));await p.locator('button[form=expense-form]').click();await p.waitForFunction(()=>!document.getElementById('expense-dialog').open);};

@@ -1,7 +1,7 @@
-const {chromium}=require('C:/Users/Iqbal/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright');
+const {chromium,launchOptions}=require('./browser-runtime.cjs');
 const fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict');
 (async()=>{
- const browser=await chromium.launch({channel:'msedge',headless:true}),dist=path.resolve(__dirname,'../dist');
+ const browser=await chromium.launch(launchOptions),dist=path.resolve(__dirname,'../dist');
  const errors=[];
  async function create(width,theme,reduced=false){
   const context=await browser.newContext({viewport:{width,height:844},isMobile:true,hasTouch:true,serviceWorkers:'block',reducedMotion:reduced?'reduce':'no-preference'});
@@ -19,7 +19,7 @@ const fs=require('node:fs'),path=require('node:path'),assert=require('node:asser
    Object.defineProperty(viewport,'height',{get:()=>height??originalHeight.call(viewport)});Object.defineProperty(viewport,'offsetTop',{get:()=>offset});
    window.__keyboard=(value,top=0)=>{height=value;offset=top;viewport.dispatchEvent(new Event('resize'));viewport.dispatchEvent(new Event('scroll'));};
   },theme);
-  await page.goto('https://motion.test/#transactions');await page.locator('.nav-add').waitFor();
+  await page.goto('https://motion.test/expenses.html#transactions');await page.locator('.nav-add').waitFor();
   return {context,page};
  }
  const read=page=>page.evaluate(async()=>{const {ExpenseRepository}=await import('./storage.mjs');return new ExpenseRepository().load();});
