@@ -181,7 +181,7 @@ dialog::backdrop {background:#10261ed0}
  /* Existing visualViewport sizing, compact category/amount rules and footer
     placement remain authoritative during both mobile keyboard modes. */
  .keyboard-open .bottom-nav {display:none}
- .keyboard-open #expense-dialog .amount-input {font-size:1.875rem}
+ .keyboard-open :is(#expense-dialog,#income-dialog) .amount-input {font-size:1.875rem}
 }
 @media(prefers-reduced-motion:reduce) {
  *,*::before,*::after {animation:none!important;transition:none!important;scroll-behavior:auto!important}

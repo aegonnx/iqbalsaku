@@ -1,23 +1,24 @@
 # Iqbal Saku
 
-A personal money hub with two separate apps: **Verse 01 — Expenses** for spending and budgets, and **Verse 02 — Money Plus** for salary, bonuses, and extra income. Vanilla HTML, CSS, and JavaScript; the expense app's official Supabase client is bundled locally for sign-in and sync.
+One personal money tracker for starting salary, extra income, expenses, and budgets. The homepage opens the tracker directly. Vanilla HTML, CSS, and JavaScript; the official Supabase client is bundled locally for account sync.
 
-## Choose an app
+## Starting budget and extra income
 
-The homepage offers two choices. Expenses opens at `/expenses.html`; Money Plus opens at `/money-plus.html`. Each app links back home. Existing expense bookmarks such as `/#settings` redirect to the expense page. The installed PWA opens the chooser and caches both apps for offline use. Keep the same hosting domain to preserve existing browser data.
+- In Settings → Monthly budgets, manually enter the selected month's starting budget / salary. `5000` means Rp5.000.000. Category budgets remain separate spending limits.
+- Use **Add income** on Read when a bonus, freelance payment, gift, refund, or other income arrives. Enter amount, source, and date received; description and note are optional. The existing thousands input and rupiah preview also apply to income.
+- Remaining money = starting budget + extra income − expenses. Rp5.000.000 salary + Rp500.000 bonus − Rp1.000.000 expenses leaves Rp4.500.000. Salary is entered as the starting budget only, never as extra income.
+- Read shows starting budget, extra income, total expenses, remaining money, and income history with editing and deletion. The expense entry flow and category limits are unchanged. Analyze keeps expense breakdowns and uses all available money for overall spending guidance.
+- Both expenses and income follow the configured budget period's start day (1–28). JSON backups, account sync, and offline storage include income. CSV marks expenses, income, and saved salary references distinctly.
 
-Money Plus has its own IndexedDB database (`saku-money-plus-v1`), separate from expense storage (`saku-expenses-v1`). It never reads expense records or changes expense budgets. Existing expense data and account sync keep their original storage and behavior.
+## Preserving saved data
 
-## Money Plus
+The existing `saku-expenses-v1` database and Supabase version-1 document remain in use. Old backups without income still restore normally. No backend schema migration is required.
 
-- Add salary, work bonuses, freelance pay, gifts, refunds, and other income on any date. For example, a Rp500.000 bonus received mid-month is entered as `500`, with source Work bonus and the date received.
-- Amount and source are the essential fields; date defaults to today. Title defaults to the source name, and title/note can be customized. Amounts use the expense app's existing thousand-entry convention with a live rupiah preview.
-- View calendar-month income, salary, extra income (all sources other than Salary), daily totals, and comparison with the previous month. Extra income is part of total income, not an expense budget increase or an available-balance calculation.
-- Edit and delete records, search titles/notes, filter by source, and browse months. History displays 60 matches at a time while totals include every matching record.
-- Overview shows source breakdown, all-time recorded income, JSON backup export/import, and income CSV export. Imports add missing records, skip identical IDs, and ask whether to keep current or backup versions when records differ. Expense backups are rejected.
-- Income saves on the current device and works offline after the site has loaded online. It does not use Supabase account sync. Export JSON backups before clearing browser data or to transfer income between devices.
+Saved Money Plus records in `saku-money-plus-v1` are imported once into the signed-out tracker when the updated app opens. The old database is retained untouched. Stable record IDs and an import ledger prevent repeated imports, including after deleting an imported record or resetting the tracker. The former app URLs redirect to the main tracker and keep supported hash bookmarks.
 
-Run `npm install` to install browser-test tooling. With `npm start` running in another terminal, run `npm run test:money-plus:browser`. Use `npx playwright install chromium` if a browser is not installed, or set `PLAYWRIGHT_EXECUTABLE_PATH` to an installed Chromium browser. The browser tests use synthetic records in isolated browser contexts.
+Previously saved salary records are preserved as references, excluded from extra income. Existing monthly budgets (including explicit zero budgets) and nonzero default budgets are preserved. Only a period without a saved budget and with a zero default budget gets its starting budget initialized from saved salary. To change starting funds later, edit Monthly budgets.
+
+Signed-out device data remains separate from signed-in accounts. In Settings → Your data, **Import saved income into this account** merges the old device income into the selected account without replacing expense records or existing budgets. Importing a Money Plus JSON backup performs the same merge. An ordinary tracker JSON restore replaces financial records after confirmation and retains the import ledger to avoid bringing back already-consumed legacy data.
 
 ## Run locally
 
@@ -25,7 +26,7 @@ Requires Node.js 20 or newer. Run `npm start`, then open `http://localhost:4173`
 
 ## Daily use
 
-- Read shows the remaining monthly budget, a full-width Makan budget card with its recommended daily allowance, and expenses grouped by date.
+- Read shows the remaining monthly money, a full-width Makan budget card with its recommended daily allowance, and expenses grouped by date.
 - Add expenses from the center button in the bottom navigation. Amount and category are required; description, date, and note are optional details.
 - Analyze shows spending by category and budget status. The settings button contains budgets, categories, quick entries, and backups.
 - All money inputs default to thousands: `500` stores 500,000 and `10` stores 10,000. `10k` also works. The live preview shows the full amount; existing records and backups retain full numeric values. IDR displays with Indonesian separators.
@@ -36,7 +37,7 @@ Requires Node.js 20 or newer. Run `npm start`, then open `http://localhost:4173`
 
 This public version starts with no expenses, historical summaries, or budgets. Configure budgets in Settings or import your own JSON backup. Personal backups are not included in this repository.
 
-Expenses persist in IndexedDB on each device. Sign in through Settings to sync through Supabase. Signed-out device data stays separate from account data. Import a JSON backup after signing in to move your records into the account. Use regular browsing and keep JSON backups; clearing website data or ending a private browsing session can remove local records.
+Expenses and income persist in IndexedDB on each device. Sign in through Settings to sync through Supabase. Signed-out device data stays separate from account data. Import a JSON backup after signing in to move your records into the account. Use regular browsing and keep JSON backups; clearing website data or ending a private browsing session can remove local records.
 
 ## Cloudflare Pages
 
@@ -46,9 +47,11 @@ Open the HTTPS site on an iPhone in Safari, then Share → Add to Home Screen. O
 
 ## Tests and code
 
-Run `npm test` for calculations, expense changes, month changes, and backup validation using synthetic test data.
+Run `npm test` for calculations, expense and income changes, budget periods, migration, backups, and sync using synthetic data. With `npm start` running, use `npm run test:income:browser` for the combined tracker and real service-worker offline checks. Install Playwright Chromium or set `PLAYWRIGHT_EXECUTABLE_PATH` to an installed browser. Existing reports, motion, hardening, and cloud browser tests cover expense regressions; cloud tests simulate Supabase rather than signing into a real user account.
 
 - `dist/model.mjs`: numeric values, validation, budgets, reports, and CSV.
+- `dist/income-model.mjs`, `dist/income-ui.mjs`: income validation and entry/history.
+- `dist/income-legacy.mjs`: safe consolidation of saved income.
 - `dist/storage.mjs`: IndexedDB repository.
 - `dist/app.mjs`: user interface.
 - `dist/styles.css`: mobile layout, white/dark themes, local fonts.
@@ -67,7 +70,7 @@ Run `npm test` for calculations, expense changes, month changes, and backup vali
 Account data is cached under a separate IndexedDB key for offline use. Signing out switches back to signed-out device data and requires pending changes to finish syncing first. Supabase and email delivery setup still need live verification.
 
 
-On touch screens, pull down at the top of a page and release to refresh the current expense data and sync online. Refresh is disabled while entering an expense or saving.
+On touch screens, pull down at the top of a page and release to refresh the current tracker data and sync online. Refresh is disabled while entering an expense or income, or saving.
 Editing dialogs keep Save and Delete in a footer outside the scrolling fields. Settings save controls stay above navigation, and Visual Viewport resizing keeps controls within the visible area when a phone keyboard opens. Keyboard layout was verified with a simulated viewport; actual iPhone and Android keyboards still need device testing.
 
 ## Motion and mobile interaction
@@ -86,6 +89,6 @@ Navigation, disclosures, theme colors, and pull-refresh use restrained 180–240
 
 ## Visual design
 
-The Taste redesign uses white and graphite surfaces with a single jade accent in both themes. Read emphasizes remaining balance and the daily Makan allowance; Analyze shows total spending, a segmented category chart and daily guidance. `dist/design.css` owns the visual layer while the original stylesheet retains keyboard layout mechanics. DESIGN.md records the visual decisions. No financial schema or sync behavior changes are required.
+The Taste redesign uses white and graphite surfaces with a single jade accent in both themes. Read emphasizes remaining balance and the daily Makan allowance; Analyze shows total spending, a segmented category chart and daily guidance. `dist/design.css` owns the visual layer while the original stylesheet retains keyboard layout mechanics. DESIGN.md records the visual decisions. Income uses the same version-1 financial document and account sync as expenses.
 
 `node tests/reports-browser.cjs` verifies chart percentages, complete totals, full-width Makan layout, historical summaries, over-budget states and empty months in both themes using synthetic data.

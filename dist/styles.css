@@ -180,7 +180,7 @@ dialog::backdrop{background:#020617a6}
  .simple-spent span{margin-left:0}
  .simple-budgets{padding:0;gap:12px}.simple-budget-row{padding:16px}
  .bottom-nav{bottom:0;width:100%;max-width:100%;border-radius:20px 20px 0 0;padding:8px 16px calc(8px + env(safe-area-inset-bottom));border-bottom:0}
- #expense-dialog{width:100%;max-width:560px;margin:auto auto 0;border-radius:24px 24px 0 0;max-height:calc(100dvh - 16px);padding-bottom:env(safe-area-inset-bottom)}
+ :is(#expense-dialog,#income-dialog){width:100%;max-width:560px;margin:auto auto 0;border-radius:24px 24px 0 0;max-height:calc(100dvh - 16px);padding-bottom:env(safe-area-inset-bottom)}
  .dialog-inner{padding:24px 20px}
  .form-grid{grid-template-columns:1fr}.span-2{grid-column:auto}
  .settings-category{flex-wrap:wrap}.settings-category input{flex-basis:100%}.settings-category .controls{margin-left:auto}
@@ -198,7 +198,7 @@ dialog::backdrop{background:#020617a6}
 /* Preserve the same phone-sized flow on larger screens. */
 .topbar{gap:8px;flex-wrap:wrap}.brand{font-size:1.25rem;gap:8px;min-width:0;overflow-wrap:anywhere}.brand img{width:32px;height:32px}.topbar-actions{display:flex;gap:8px;margin-left:auto;flex-shrink:0}
 .bottom-nav{max-width:480px}.topbar [data-action="theme"]{color:var(--blue)}
-#expense-dialog{max-width:480px}.simple-spent{row-gap:4px}
+:is(#expense-dialog,#income-dialog){max-width:480px}.simple-spent{row-gap:4px}
 
 /* Distinct expense cards against the white page. */
 :root:not([data-theme="dark"]) .date-group .transaction{background:var(--expense-surface);border:1px solid var(--expense-border);border-radius:16px;margin-top:12px;padding:16px 12px}
@@ -214,7 +214,7 @@ html{overscroll-behavior-y:contain}
 dialog .dialog-inner{display:flex;flex-direction:column;max-height:calc(var(--visible-height,100dvh) - 32px);overflow:hidden}
 dialog .dialog-header{flex-shrink:0;margin-bottom:16px}
 dialog .expense-form,dialog .confirm-form{min-height:0;overflow-y:auto;overscroll-behavior:contain;padding:4px;scroll-padding-bottom:24px}
-#expense-dialog .expense-form{display:flex;flex-direction:column;gap:12px;overflow:hidden}
+:is(#expense-dialog,#income-dialog) .expense-form{display:flex;flex-direction:column;gap:12px;overflow:hidden}
 .expense-core{display:grid;gap:16px;flex-shrink:0}
 .expense-options{min-height:0;overflow-y:auto;overscroll-behavior:contain;scroll-padding-block:8px}
 .history-pagination{display:grid;gap:12px;text-align:center;font-size:.875rem}
@@ -227,32 +227,32 @@ dialog .confirmation-copy{flex-shrink:0;margin-bottom:16px}
 dialog .dialog-inner>.form-actions{flex-shrink:0;margin-top:16px;padding-top:16px;border-top:1px solid var(--line);background:var(--surface)}
 .settings-actions{position:sticky;bottom:calc(96px + var(--keyboard-space,0px));z-index:5;padding:12px 0;background:var(--surface);border-top:1px solid var(--line)}
 @media(max-width:600px){
- dialog[open],#expense-dialog[open]{position:fixed;top:auto;bottom:var(--keyboard-space,0px);left:0;right:0;margin:0 auto;width:100%;max-width:480px;max-height:calc(var(--visible-height,100dvh) - 16px);border-radius:24px 24px 0 0;padding-bottom:env(safe-area-inset-bottom)}
+ dialog[open],:is(#expense-dialog,#income-dialog)[open]{position:fixed;top:auto;bottom:var(--keyboard-space,0px);left:0;right:0;margin:0 auto;width:100%;max-width:480px;max-height:calc(var(--visible-height,100dvh) - 16px);border-radius:24px 24px 0 0;padding-bottom:env(safe-area-inset-bottom)}
  dialog .dialog-inner{max-height:calc(var(--visible-height,100dvh) - 32px);padding:20px}
  .keyboard-open .bottom-nav{display:none}
  .keyboard-open .settings-actions{bottom:var(--keyboard-space,0px)}
  .keyboard-open main{padding-bottom:calc(var(--keyboard-space,0px) + 24px)}
  /* Keep the two essential fields visible; only optional details scroll.
     The keyboard already occupies the bottom safe area. */
- .keyboard-open #expense-dialog{padding-bottom:0;max-height:calc(var(--visible-height,100dvh) - 8px)}
- .keyboard-open #expense-dialog .dialog-inner{max-height:calc(var(--visible-height,100dvh) - 8px);padding:8px 16px}
- .keyboard-open #expense-dialog .dialog-header{margin-bottom:4px}
- .keyboard-open #expense-dialog .dialog-header h2{font-size:1.25rem}
- .keyboard-open #expense-dialog [data-expense-details]{display:inline-flex;align-items:center;justify-content:center}
- .keyboard-open #expense-dialog:not(.details-mode) .expense-options{display:none}
- .keyboard-open #expense-dialog.details-mode .expense-core{display:none}
- .keyboard-open #expense-dialog.details-mode .expense-options{flex:1}
- .keyboard-open #expense-dialog:not(.details-mode) .amount-field:has(.error-message:not(:empty)) .amount-preview{display:none}
- .keyboard-open #expense-dialog .amount-field .error-message{max-height:42px;overflow-y:auto}
- .keyboard-open #expense-dialog .expense-form{gap:4px}
+ .keyboard-open :is(#expense-dialog,#income-dialog){padding-bottom:0;max-height:calc(var(--visible-height,100dvh) - 8px)}
+ .keyboard-open :is(#expense-dialog,#income-dialog) .dialog-inner{max-height:calc(var(--visible-height,100dvh) - 8px);padding:8px 16px}
+ .keyboard-open :is(#expense-dialog,#income-dialog) .dialog-header{margin-bottom:4px}
+ .keyboard-open :is(#expense-dialog,#income-dialog) .dialog-header h2{font-size:1.25rem}
+ .keyboard-open :is(#expense-dialog,#income-dialog) [data-expense-details]{display:inline-flex;align-items:center;justify-content:center}
+ .keyboard-open :is(#expense-dialog,#income-dialog):not(.details-mode) .expense-options{display:none}
+ .keyboard-open :is(#expense-dialog,#income-dialog).details-mode .expense-core{display:none}
+ .keyboard-open :is(#expense-dialog,#income-dialog).details-mode .expense-options{flex:1}
+ .keyboard-open :is(#expense-dialog,#income-dialog):not(.details-mode) .amount-field:has(.error-message:not(:empty)) .amount-preview{display:none}
+ .keyboard-open :is(#expense-dialog,#income-dialog) .amount-field .error-message{max-height:42px;overflow-y:auto}
+ .keyboard-open :is(#expense-dialog,#income-dialog) .expense-form{gap:4px}
  .keyboard-open .expense-core{gap:8px}
  .keyboard-open .amount-label{font-size:.875rem;line-height:20px;margin-bottom:4px}
- .keyboard-open #expense-dialog .amount-input{font-size:1.875rem;line-height:1.2;min-height:50px;padding:6px 12px}
- .keyboard-open #expense-dialog .amount-preview{line-height:20px;margin-top:4px}
- .keyboard-open #expense-dialog .category-field{line-height:20px;gap:4px}
- .keyboard-open #expense-dialog .category-field select{min-height:44px;line-height:1.25;padding:8px 12px}
- .keyboard-open #expense-dialog .dialog-inner>.form-actions{margin-top:8px;padding-top:8px}
- .keyboard-open #expense-dialog .form-actions button{min-height:44px;padding:10px 16px;line-height:1.25}
+ .keyboard-open :is(#expense-dialog,#income-dialog) .amount-input{font-size:1.875rem;line-height:1.2;min-height:50px;padding:6px 12px}
+ .keyboard-open :is(#expense-dialog,#income-dialog) .amount-preview{line-height:20px;margin-top:4px}
+ .keyboard-open :is(#expense-dialog,#income-dialog) .category-field{line-height:20px;gap:4px}
+ .keyboard-open :is(#expense-dialog,#income-dialog) .category-field select{min-height:44px;line-height:1.25;padding:8px 12px}
+ .keyboard-open :is(#expense-dialog,#income-dialog) .dialog-inner>.form-actions{margin-top:8px;padding-top:8px}
+ .keyboard-open :is(#expense-dialog,#income-dialog) .form-actions button{min-height:44px;padding:10px 16px;line-height:1.25}
 }
 
 .pull-refresh{width:48px;height:48px;padding:11px;display:grid;place-items:center;border-radius:50%}

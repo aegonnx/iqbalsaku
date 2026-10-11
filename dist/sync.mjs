@@ -35,7 +35,7 @@ function merge(base,local,remote){
  throw new SyncConflict();
 }
 export function mergeStates(base,local,remote){
- try{return validateState(merge(base,local,remote));}catch(error){if(error instanceof SyncConflict)throw error;throw new SyncConflict();}
+ try{return validateState(merge(validateState(base),validateState(local),validateState(remote)));}catch(error){if(error instanceof SyncConflict)throw error;throw new SyncConflict();}
 }
 
 export class SupabaseRemote{

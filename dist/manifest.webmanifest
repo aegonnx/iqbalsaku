@@ -2,7 +2,7 @@
   "id": "./",
   "name": "Iqbal Saku",
   "short_name": "Iqbal Saku",
-  "description": "Separate expense and income journals for your everyday money",
+  "description": "Your expenses, starting salary, and extra income in one tracker",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

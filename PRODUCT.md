@@ -18,15 +18,16 @@ Success means reliable saving, correct balances after every change, fast entry w
 
 ## Operating Context
 
-- The homepage is an app chooser: Verse 01 — Expenses and Verse 02 — Money Plus. The original expense app lives at `/expenses.html`; old root hash bookmarks redirect there. Both apps return to the chooser and remain available offline through the existing PWA.
-- Money Plus lives at `/money-plus.html` and records incoming money separately: salary, work bonuses, freelance pay, gifts, refunds, and other income. It has calendar-month totals, salary/extra totals, source breakdowns, search/filter, editing/deletion, and JSON/CSV backups. It does not change expense budgets or use expense account sync. Income is device-local in its own IndexedDB database.
 - Design primarily for an iPhone-sized screen and one-handed use. Android mobile browsers and desktop browsers must remain usable; larger screens retain the compact phone-oriented flow.
 - The app can be installed as a PWA and used offline after its shell has been cached.
 - The main navigation is Read, Add, and Analyze. Settings are reached through the top settings button.
 - Read prioritizes remaining monthly budget, followed by total spending, one full-width Makan budget card with its daily allowance, and expenses grouped by date.
 - Add is the central bottom-navigation action. Edit opens without activating the keyboard; tapping a field starts editing, and Delete is immediately available.
 - Analyze provides monthly totals, category breakdowns, budget comparisons, and spending guidance. Month navigation uses short title-case labels such as Sep and Oct.
-- Optional Supabase sign-in keeps account expenses available across devices. Signed-out device records and signed-in account records remain separate. Moving device records into an account requires importing a backup after signing in.
+- Optional Supabase sign-in keeps account expenses and income available across devices. Signed-out device records and signed-in account records remain separate. Moving device records into an account requires importing a backup after signing in.
+
+- One tracker opens directly at the homepage. Starting salary is the monthly budget; bonuses and other received money add to available funds. Remaining = starting budget + extra income − expenses. Preserve the existing expense flow, category budgets, configured budget periods, sync, and backups.
+- Income supports amount, source, date received, optional description/note, and editing/deletion. Saved Money Plus records migrate idempotently; salary references are excluded from extra income and existing starting budgets are never overwritten. Signed-out device income is imported into an account only by an explicit action.
 
 ## Capabilities and Constraints
 
@@ -44,7 +45,7 @@ Success means reliable saving, correct balances after every change, fast entry w
 - Preserve JSON export/import, transaction CSV export, and confirmed reset. Preserve historical monthly summaries without inventing individual dates or transactions.
 - The public build starts empty. Never include personal backups, private financial records, passwords, or secret/service-role keys in public assets or Git.
 - Retain the lightweight existing implementation: static HTML, CSS, JavaScript modules, IndexedDB, and a locally bundled Supabase client. Cloudflare Pages serves the dist directory; no app server is required for hosting.
-- Prevent duplicate dialogs and duplicate saves. Pull-to-refresh uses a moving circle and is disabled during expense entry or saving.
+- Prevent duplicate dialogs and duplicate saves. Pull-to-refresh uses a moving circle and is disabled during expense or income entry, or saving.
 - AI chat is outside the current scope; the user chose to leave it out.
 
 ## Brand Commitments

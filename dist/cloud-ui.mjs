@@ -39,7 +39,7 @@ export class CloudController{
  section(){
   const head='<section class="card settings-card"><h2>Online sync</h2>';
   if(!this.client)return head+'<p class="muted">This build saves on this device. Online sync has not been connected yet.</p></section>';
-  if(!this.user)return head+'<p class="muted">Sign in to keep the same expenses on your phone and computer. Your existing device data stays separate until you import a backup into your account.</p><div class="button-row"><button class="primary" data-action="cloud-signin">Sign in</button><button class="secondary" data-action="cloud-signup">Create account</button></div></section>';
+  if(!this.user)return head+'<p class="muted">Sign in to keep the same expenses and income on your phone and computer. Your existing device data stays separate until you import a backup into your account.</p><div class="button-row"><button class="primary" data-action="cloud-signin">Sign in</button><button class="secondary" data-action="cloud-signup">Create account</button></div></section>';
   return head+'<p class="account-email">'+this.escape(this.user.email||'Signed in')+'</p><p class="muted" role="status" data-sync-status>'+this.escape(labels[this.status]||'Checking online copy…')+'</p><p class="muted" data-sync-error>'+this.escape(this.lastError)+'</p><div class="button-row"><button class="secondary" data-action="cloud-sync">Sync now</button><button class="secondary" data-action="cloud-signout">Sign out</button></div><div class="sync-conflict" data-sync-conflict '+(this.status==='conflict'?'':'hidden')+'><p>Both devices changed the same information. Export a backup before choosing a copy.</p><div class="button-row"><button class="secondary" data-action="cloud-keep-online">Keep online copy</button><button class="secondary" data-action="cloud-keep-device">Keep this device’s copy</button></div></div><small>Changes save on this device first, then sync online. Keep JSON backups too.</small></section>';
  }
  async action(action){
@@ -66,10 +66,10 @@ export class CloudController{
    case 'cloud-keep-online':case 'cloud-keep-device':{
     const repository=this.repository;if(!repository)throw new Error('Sign in first.');
     const online=action==='cloud-keep-online';
-    this.showConfirm('Choose your expense copy',online?'Keep the online copy and replace this device’s pending changes? A backup of your device copy will download first.':'Replace the online copy with this device’s copy? A backup of the online copy will download first.','',async()=>{
+    this.showConfirm('Choose your tracker copy',online?'Keep the online copy and replace this device’s pending changes? A backup of your device copy will download first.':'Replace the online copy with this device’s copy? A backup of the online copy will download first.','',async()=>{
      const backup=online?await repository.load():(await repository.remote.read())?.state;
      if(backup)this.download(JSON.stringify(backup,null,2),'application/json','iqbal-saku-before-sync-resolution.json');
-     await (online?repository.keepOnline():repository.keepDevice());this.notify('Expense copy updated');
+     await (online?repository.keepOnline():repository.keepDevice());this.notify('Tracker copy updated');
     },online?'Keep online copy':'Keep device copy');break;
    }
   }

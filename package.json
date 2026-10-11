@@ -2,12 +2,12 @@
   "name": "iqbal-saku",
   "version": "1.0.0",
   "private": true,
-  "description": "A simple mobile expense tracker with local storage",
+  "description": "A mobile income and expense tracker with offline storage and account sync",
   "scripts": {
     "start": "node server.cjs",
     "test": "node --test tests/*.test.mjs",
     "build:client": "node scripts/build-supabase.mjs",
-    "test:money-plus:browser": "node tests/money-plus-browser.cjs"
+    "test:income:browser": "node tests/income-browser.cjs"
   },
   "engines": {
     "node": ">=20"

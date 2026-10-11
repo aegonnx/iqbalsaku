@@ -1,3 +1,4 @@
+import {validateIncomeFields,sourceName} from './income-model.mjs';
 export const VERSION = 1;
 export const categoryNames = ['Makan','Snack','Dating','Kebutuhan Rumah','Transport','Sosial / Entertainment','Peralatan Kerja','Bantu Ibu','Lain-lain','Paket Data','Sedekah / Sosial'];
 export const categoryIds = ['makan','snack','dating','rumah','transport','entertainment','kerja','ibu','lain','data','sedekah'];
@@ -17,7 +18,7 @@ export function parseAmount(raw) {
 export function seedState() {
   return {version:VERSION,categoryDefaultsVersion:1,settings:{currency:'IDR',startDay:1,defaultBudget:0},
     categories:categoryIds.map((key,i)=>({id:key,name:categoryNames[i],icon:categoryIcons[i],color:categoryColors[i]})),
-    transactions:[],budgets:{},summaries:{},quickExpenses:[]};
+    transactions:[],income:[],legacyIncomeImports:[],budgets:{},summaries:{},quickExpenses:[]};
 }
 export function upgradeState(raw) {
   const state=validateState(raw);
@@ -46,10 +47,13 @@ export function metrics(state,month,today=localDate()) {
   const summary=state.summaries[month]; const categories=Object.fromEntries(state.categories.map(c=>[c.id,summary?.categories[c.id]||0]));
   for(const t of rows) categories[t.categoryId]=(categories[t.categoryId]||0)+t.amount;
   const spent=rows.reduce((n,t)=>n+t.amount,summary?.total||0);const budget=budgetFor(state,month);
+  const incomeRows=(state.income||[]).filter(t=>t.date>=range.start&&t.date<range.end);
+  const extraIncome=incomeRows.filter(t=>t.source!=='salary').reduce((sum,t)=>sum+t.amount,0);
+  const startingBudget=budget.overall,available=startingBudget+extraIncome;
   const startUTC=Date.parse(range.start+'T00:00:00Z'),todayUTC=Date.parse(today+'T00:00:00Z');
   const elapsed=today<range.start?0:today>=range.end?range.days:Math.floor((todayUTC-startUTC)/86400000)+1;
   const daysLeft=range.days-elapsed;
-  return {rows,categories,spent,budget,remaining:budget.overall-spent,percent:budget.overall?spent/budget.overall*100:0,elapsed,daysLeft,average:elapsed?spent/elapsed:0,recommended:daysLeft?Math.max(0,budget.overall-spent)/daysLeft:0,range,summary};
+  return {rows,incomeRows,extraIncome,startingBudget,available,categories,spent,budget,remaining:available-spent,percent:available?spent/available*100:0,elapsed,daysLeft,average:elapsed?spent/elapsed:0,recommended:daysLeft?Math.max(0,available-spent)/daysLeft:0,range,summary};
 }
 export function budgetState(spent,budget) { if(budget===undefined||budget===null)return 'none';if(budget===0)return spent>0?'over':'normal'; const ratio=spent/budget;return ratio>1?'over':ratio>=.9?'warning':ratio>=.7?'caution':'normal'; }
 export function validateExpense(t,state) {
@@ -73,11 +77,12 @@ export function validateState(raw) {
   Object.entries(s.summaries).forEach(([m,b])=>{if(!validMonth(m)||!b||!money(b.total)||!b.categories||typeof b.categories!=='object'||Array.isArray(b.categories))throw new Error('Backup summary is invalid.');let total=0;Object.entries(b.categories).forEach(([key,n])=>{if(!ids.has(key)||!money(n))throw new Error('Backup summary category is invalid.');total+=n;});if(total!==b.total)throw new Error('Summary categories must add up to the summary total.');});
   if(!Array.isArray(s.quickExpenses)||s.quickExpenses.length>100)throw new Error('Backup quick expenses are invalid.');
   const qids=new Set();s.quickExpenses.forEach(q=>{if(!q||typeof q.id!=='string'||!q.id||qids.has(q.id)||!ids.has(q.categoryId)||typeof q.description!=='string'||!q.description.trim()||q.description.length>160||!money(q.amount)||q.amount===0)throw new Error('Backup quick expense is invalid.');qids.add(q.id);});
+  validateIncomeFields(s);
   return s;
 }
 export function csv(state) {
   const quote=v=>{let s=String(v??'');if(/^[=+\-@\t\r]/.test(s))s="'"+s;return '"'+s.replace(/"/g,'""')+'"';};
-  const rows=[['Date','Description','Category','Amount','Currency','Note'],...state.transactions.slice().sort((a,b)=>a.date.localeCompare(b.date)).map(t=>[t.date,t.description,state.categories.find(c=>c.id===t.categoryId)?.name||'',t.amount,state.settings.currency,t.note])];
+  const rows=[['Date','Description','Category / Source','Amount','Currency','Note','Type'],...state.transactions.slice().sort((a,b)=>a.date.localeCompare(b.date)).map(t=>[t.date,t.description,state.categories.find(c=>c.id===t.categoryId)?.name||'',t.amount,state.settings.currency,t.note,'Expense']),...(state.income||[]).slice().sort((a,b)=>a.date.localeCompare(b.date)).map(t=>[t.date,t.title,sourceName(t.source),t.amount,state.settings.currency,t.note,t.source==='salary'?'Starting salary reference (excluded from extra income)':'Income'])];
   return '\uFEFF'+rows.map(row=>row.map(quote).join(',')).join('\r\n');
 }
 
