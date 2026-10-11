@@ -64,7 +64,7 @@ export function validDate(s) { if(typeof s!=='string'|| !/^\d{4}-\d{2}-\d{2}$/.t
 function money(n) { return Number.isSafeInteger(n)&&n>=0&&n<=1000000000000; }
 export function validateState(raw) {
   const s=structuredClone(raw);
-  if(!s||s.version!==VERSION)throw new Error('This is not a supported Iqbal Saku backup (version 1).');
+  if(!s||s.version!==VERSION)throw new Error('This is not a supported mySaku backup (version 1).');
   if(!s.settings || !['IDR','USD','SGD'].includes(s.settings.currency) || !Number.isInteger(s.settings.startDay)||s.settings.startDay<1||s.settings.startDay>28||!money(s.settings.defaultBudget))throw new Error('Backup settings are invalid.');
   if(!Array.isArray(s.categories)||!s.categories.length||s.categories.length>100)throw new Error('Backup categories are invalid.');
   const ids=new Set(),names=new Set();

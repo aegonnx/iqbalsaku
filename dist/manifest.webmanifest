@@ -1,7 +1,7 @@
 {
   "id": "./",
-  "name": "SiDompet",
-  "short_name": "SiDompet",
+  "name": "mySaku",
+  "short_name": "mySaku",
   "description": "Your expenses, starting salary, and extra income in one tracker",
   "start_url": "./",
   "scope": "./",

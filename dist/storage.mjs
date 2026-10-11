@@ -3,7 +3,7 @@ const DB_NAME='saku-expenses-v1';
 export class ExpenseRepository {
   constructor(){this.db=null;}
   async open(){
-    this.db=await new Promise((resolve,reject)=>{const request=indexedDB.open(DB_NAME,1);request.onupgradeneeded=()=>request.result.createObjectStore('state');request.onsuccess=()=>resolve(request.result);request.onerror=()=>reject(request.error);request.onblocked=()=>reject(new Error('Close other Iqbal Saku tabs, then try again.'));});
+    this.db=await new Promise((resolve,reject)=>{const request=indexedDB.open(DB_NAME,1);request.onupgradeneeded=()=>request.result.createObjectStore('state');request.onsuccess=()=>resolve(request.result);request.onerror=()=>reject(request.error);request.onblocked=()=>reject(new Error('Close other mySaku tabs, then try again.'));});
     this.db.onversionchange=()=>this.db.close();
   }
   async load(){

@@ -5,14 +5,14 @@ const origin=process.env.SAKU_TEST_ORIGIN||'http://localhost:4173';
  const browser=await chromium.launch(launchOptions),errors=[];
  try{
   for(const width of [320,390,430])for(const theme of ['light','dark']){
-   const context=await browser.newContext({viewport:{width,height:844},isMobile:true,hasTouch:true,serviceWorkers:'block'});
+   const context=await browser.newContext({viewport:{width,height:844},isMobile:true,hasTouch:true,serviceWorkers:'block',reducedMotion:'reduce'});
    try{
     await context.addInitScript(theme=>localStorage.setItem('iqbal-saku-theme',theme),theme);
     const page=await context.newPage();page.on('pageerror',error=>errors.push(error.message));await page.goto(origin+'/');await page.locator('[data-action=add-income]').waitFor();await page.locator('#selected-month').fill('2026-10');
-    assert.equal(await page.locator('.brand').textContent(),'SiDompet');assert.equal(await page.title(),'SiDompet — Personal money tracker');assert.equal(await page.locator('.simple-budget-row').count(),0);assert.equal(await page.getByRole('heading',{name:'Money in & out'}).count(),1);
+    assert.equal(await page.locator('.brand').textContent(),'mySaku');assert.equal(await page.title(),'mySaku — Personal money tracker');assert.equal(await page.locator('.simple-budget-row').count(),0);assert.equal(await page.getByRole('heading',{name:'Money in & out'}).count(),1);
     const jade=await page.locator('.nav-add').evaluate(el=>getComputedStyle(el).backgroundColor);
     await page.locator('.topbar [data-page=settings]').tap();await page.locator('.settings-section').filter({has:page.locator('summary',{hasText:'Color palette'})}).locator('summary').first().tap();await page.locator('#color-palette').selectOption('blue');
-    assert.equal(await page.evaluate(()=>document.documentElement.dataset.palette),'blue');const blue=await page.locator('.nav-add').evaluate(async el=>{await Promise.all(el.getAnimations().map(a=>a.finished.catch(()=>{})));return getComputedStyle(el).backgroundColor;});assert.notEqual(blue,jade);await page.reload();await page.locator('.nav-add').waitFor();assert.equal(await page.evaluate(()=>document.documentElement.dataset.palette),'blue');assert.equal(await page.locator('.nav-add').evaluate(el=>getComputedStyle(el).backgroundColor),blue);assert.equal(await page.evaluate(()=>document.documentElement.dataset.theme),theme);await page.locator('[data-page=transactions]').tap();
+    assert.equal(await page.evaluate(()=>document.documentElement.dataset.palette),'blue');const blue=await page.locator('.nav-add').evaluate(async el=>{await Promise.all(el.getAnimations().map(a=>a.finished.catch(()=>{})));return getComputedStyle(el).backgroundColor;});assert.notEqual(blue,jade);await page.reload();await page.locator('.nav-add').waitFor();assert.equal(await page.evaluate(()=>document.documentElement.dataset.palette),'blue');await page.waitForFunction(blue=>{const button=document.querySelector('.nav-add');return button&&getComputedStyle(button).backgroundColor===blue;},blue);assert.equal(await page.evaluate(()=>document.documentElement.dataset.theme),theme);await page.locator('[data-page=transactions]').tap();
     // Check the full arrow rectangles, particularly the edges next to the picker.
     for(const direction of ['-1','1']){
      const button=page.locator('[data-action=month][data-direction="'+direction+'"]'),box=await button.boundingBox(),picker=await page.locator('.month-picker').boundingBox();assert.ok(box.width>=48&&box.height>=48);
@@ -29,7 +29,7 @@ const origin=process.env.SAKU_TEST_ORIGIN||'http://localhost:4173';
     const colors=await page.evaluate(()=>{const root=getComputedStyle(document.documentElement);return {income:getComputedStyle(document.querySelector('.money-in')).color,expense:getComputedStyle(document.querySelector('.money-out')).color,green:root.getPropertyValue('--success').trim(),red:root.getPropertyValue('--danger').trim()};});assert.notEqual(colors.income,colors.expense);assert.ok(colors.income.includes(theme==='dark'?'140, 212, 174':'35, 116, 91'));assert.ok(colors.expense.includes(theme==='dark'?'243, 166, 176':'174, 51, 70'));
     const daily=await page.locator('.daily-total').textContent();assert.match(daily,/Out: Rp100\.000/);assert.match(daily,/In: Rp500\.000/);
     await page.locator('.filter-menu summary').tap();await page.locator('#category-filter').selectOption('@income');assert.equal(await page.locator('#history-list [data-action=edit-income]').count(),1);assert.equal(await page.locator('#history-list [data-action=edit]').count(),0);await page.locator('.filter-menu summary').tap();await page.locator('#category-filter').selectOption('@expense');assert.equal(await page.locator('#history-list [data-action=edit]').count(),1);assert.equal(await page.locator('#history-list [data-action=edit-income]').count(),0);
-    console.log('PASS '+width+'px '+theme+': SiDompet branding, remembered Ocean blue palette, combined colored in/out history, filters, separated month arrow edge targets');
+    console.log('PASS '+width+'px '+theme+': mySaku branding, remembered Ocean blue palette, combined colored in/out history, filters, separated month arrow edge targets');
    }finally{await context.close();}
   }
   assert.deepEqual(errors,[]);

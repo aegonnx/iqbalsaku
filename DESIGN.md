@@ -1,4 +1,4 @@
-# Iqbal Saku visual system
+# mySaku visual system
 
 ## Direction
 

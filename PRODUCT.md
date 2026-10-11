@@ -1,4 +1,4 @@
-# SiDompet
+# mySaku
 
 <!-- impeccable:product-schema 1 -->
 
@@ -53,7 +53,7 @@ Success means reliable saving, correct balances after every change, fast entry w
 
 ## Brand Commitments
 
-- Use SiDompet in the app header, browser tab, and installation metadata. Keep existing database/storage keys and PWA identity to preserve user data.
+- Use mySaku in the app header, browser tab, and installation metadata. Keep existing database/storage keys and PWA identity to preserve user data.
 - Preserve the user's direction: modern, minimal, professional, uncluttered, and mobile-first, with clear hierarchy and distinct expense rows.
 - White is the default theme. Keep the top theme switch, the dark alternative, and the remembered choice. Offer Jade and Ocean blue palette options in Settings; keep income green and expenses red in either palette.
 - Use neutral transaction wording. Do not add report-source labels or notes to imported expenses.

@@ -1,6 +1,6 @@
-# SiDompet
+# mySaku
 
-SiDompet (formerly Iqbal Saku) is one personal money tracker for starting salary, extra income, expenses, and budgets. The homepage opens the tracker directly. Vanilla HTML, CSS, and JavaScript; the official Supabase client is bundled locally for account sync.
+mySaku (formerly Iqbal Saku) is one personal money tracker for starting salary, extra income, expenses, and budgets. The homepage opens the tracker directly. Vanilla HTML, CSS, and JavaScript; the official Supabase client is bundled locally for account sync.
 
 ## Starting budget and extra income
 
@@ -26,7 +26,7 @@ Signed-out device data remains separate from signed-in accounts. In Settings →
 
 ## Appearance and month navigation
 
-Settings → Color palette offers Jade and Ocean blue. The selection is remembered on this device and works in both light and dark themes. The month arrows have separate 48-pixel touch targets, with a gap and a contained center month picker. The visible brand, browser title, and install name are SiDompet; existing database names, backup format, PWA identity, and saved theme preferences are retained.
+Settings → Color palette offers Jade and Ocean blue. The selection is remembered on this device and works in both light and dark themes. The month arrows have separate 48-pixel touch targets, with a gap and a contained center month picker. The visible brand, browser title, and install name are mySaku; existing database names, backup format, PWA identity, and saved theme preferences are retained.
 
 ## Run locally
 
@@ -101,4 +101,4 @@ The Taste redesign uses white and graphite surfaces with a single jade accent in
 
 `node tests/reports-browser.cjs` verifies chart percentages, complete totals, category budgets, historical summaries, over-budget states and empty months in both themes using synthetic data.
 
-`node tests/appearance-browser.cjs` verifies the SiDompet brand, remembered palette, money-in/out colors and filters, and the full month-arrow touch targets at 320/390/430 pixels in both themes.
+`node tests/appearance-browser.cjs` verifies the mySaku brand, remembered palette, money-in/out colors and filters, and the full month-arrow touch targets at 320/390/430 pixels in both themes.
