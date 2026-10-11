@@ -28,8 +28,7 @@ const fs=require('node:fs'),path=require('node:path'),assert=require('node:asser
   assert.equal(await page.locator('[data-testid=spent]').textContent(),'Rp1.340.000');
   await page.locator('.nav-add').tap();await page.getByRole('dialog',{name:'Add expense',exact:true}).waitFor();await page.locator('#expense-amount').fill('0');
   await page.evaluate(()=>{Object.defineProperty(visualViewport,'height',{configurable:true,value:340});visualViewport.dispatchEvent(new Event('resize'));});await page.waitForFunction(()=>document.documentElement.classList.contains('keyboard-open'));
-  await page.locator('#expense-amount').fill('');await page.locator('[data-expense-details]').tap();
-  await page.locator('#expense-description').fill('Validation from details');
+  await page.locator('#expense-amount').fill('');await page.locator('#expense-description').fill('Validation from details');await page.locator('[data-expense-details]').tap();await page.locator('#expense-form [name=note]').fill('Optional keyboard note');
   await page.locator('[data-submit-form=expense-form]').tap();await page.locator('#expense-error').filter({hasText:'positive amount'}).waitFor();
   assert.equal(await page.evaluate(()=>document.activeElement.id),'expense-amount');
   const error=await page.locator('#expense-error').boundingBox(),category=await page.locator('#expense-category').boundingBox(),footer=await page.locator('#expense-dialog .form-actions').boundingBox();

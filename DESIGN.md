@@ -19,7 +19,7 @@ Problems addressed: equal visual weight across unrelated cards; large tinted bal
 - Read: remaining balance on the page canvas, compact spent/budget columns, full-width food allowance surface, separate expense cards grouped by date.
 - Analyze: total spending and budget position, two-column daily guidance, a segmented category chart with matching percentages and amounts, budget guidance and expandable biggest expenses.
 - Settings: quiet collapsed surfaces, bordered expanded sections, sticky save controls.
-- Add/Edit: native bottom sheet, prominent amount, immediately reachable category, optional details, stable Save/Delete footer. Existing visualViewport behavior remains authoritative.
+- Add/Edit: native bottom sheet, prominent amount, immediately reachable category/source and description, optional date and notes, stable Save/Delete footer. Existing visualViewport behavior remains authoritative.
 - Navigation: full-width bar anchored flush to the bottom with three established actions and a prominent center Add control. Bottom padding includes the device safe area; the bar hides during keyboard entry.
 
 ## Tokens and typography

@@ -35,7 +35,7 @@ Requires Node.js 20 or newer. Run `npm start`, then open `http://localhost:4173`
 ## Daily use
 
 - Read shows the remaining monthly money, money in and out grouped by date. Category budgets remain available in Settings and Analyze.
-- Add expenses from the center button in the bottom navigation. Amount and category are required; description, date, and note are optional details.
+- Add expenses from the center button in the bottom navigation. Amount and category are required. Description is optional and immediately visible beside these fields; date and note are optional details.
 - Analyze shows spending by category and budget status. The settings button contains budgets, categories, quick entries, and backups.
 - All money inputs default to thousands: `500` stores 500,000 and `10` stores 10,000. `10k` also works. The live preview shows the full amount; existing records and backups retain full numeric values. IDR displays with Indonesian separators.
 - The date defaults to the device's local date. Daily recommendations divide the remaining available money by days after today, or the full period for future months.
@@ -85,7 +85,7 @@ Editing dialogs keep Save and Delete in a footer outside the scrolling fields. S
 
 Dialogs use one native autofocus step during the user's tap, with 240 ms entry and 180 ms exit animations. Exit completion controls dismissal instead of an arbitrary timeout. Keyboard geometry writes are coalesced once per animation frame and unchanged values are skipped. Save and Delete remain outside the scrolling fields; a second open or submit cannot replace a draft or duplicate a save.
 
-Edit opens without activating the keyboard. With the keyboard open, the header's Details button exposes description, date, note, and recent suggestions in a separate scrolling area; Amount returns to the essential fields. Dialogs have accessible names, navigation focuses the page heading, and replacement renders restore relevant same-page focus. Page titles and month controls are inside the main landmark.
+Edit opens without activating the keyboard. Expense and income entry show amount, category/source, and description together above the mobile keyboard. Add automatically focuses the thousands amount input. The header's Details button exposes date, note, and recent expense suggestions in a separate scrolling area; Entry returns to the main fields. Save stays in the fixed dialog footer. Dialogs have accessible names, navigation focuses the page heading, and replacement renders restore relevant same-page focus. Page titles and month controls are inside the main landmark.
 
 Large histories render 60 matching expenses initially. Show more expenses loads another 60; search, category, and month changes reset the batch. Daily totals and monthly budgets always include all applicable records, including those not yet rendered. Search reuses a sorted text index and groups matches in one pass.
 

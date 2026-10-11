@@ -12,7 +12,7 @@ const fs=require('node:fs'),path=require('node:path'),assert=require('node:asser
    const type={'.html':'text/html','.mjs':'text/javascript','.js':'text/javascript','.css':'text/css','.svg':'image/svg+xml','.png':'image/png','.woff2':'font/woff2'}[path.extname(file)]||'application/json';
    return route.fulfill({contentType:type,body:fs.readFileSync(file)});
   });
-  const page=await context.newPage();page.on('pageerror',error=>errors.push(error.message));
+  context.setDefaultTimeout(15000);const page=await context.newPage();page.on('pageerror',error=>errors.push(error.message));
   await page.addInitScript(theme=>{
    localStorage.setItem('iqbal-saku-theme',theme);window.__focus=[];document.addEventListener('focusin',event=>window.__focus.push(event.target.id));
    let height=null,offset=0;const viewport=visualViewport,originalHeight=Object.getOwnPropertyDescriptor(Object.getPrototypeOf(viewport),'height').get;
@@ -42,17 +42,17 @@ const fs=require('node:fs'),path=require('node:path'),assert=require('node:asser
      await page.waitForFunction(height=>document.documentElement.style.getPropertyValue('--visible-height')===height+'px',height);
      const geometry=await page.evaluate(()=>{
       const rect=selector=>{const r=document.querySelector(selector).getBoundingClientRect();return {top:r.top,bottom:r.bottom,height:r.height};};
-      return {category:rect('#expense-category'),amount:rect('#expense-amount'),form:rect('#expense-form'),footer:rect('#expense-dialog .dialog-inner>.form-actions'),scroll:document.getElementById('expense-form').scrollTop};
+      return {category:rect('#expense-category'),amount:rect('#expense-amount'),description:rect('#expense-description'),form:rect('#expense-form'),footer:rect('#expense-dialog .dialog-inner>.form-actions'),scroll:document.getElementById('expense-form').scrollTop};
      });
      assert.ok(geometry.category.top>=geometry.form.top&&geometry.category.bottom<=geometry.form.bottom+1,JSON.stringify({width,theme,height,top,geometry}));
-     assert.ok(geometry.category.bottom<=geometry.footer.top&&geometry.footer.bottom<=height+top+1,JSON.stringify(geometry));
-     assert.ok(geometry.category.height>=44&&geometry.amount.height>=44);assert.equal(geometry.scroll,0);
+     assert.ok(geometry.amount.top>=top&&geometry.description.bottom<=geometry.footer.top&&geometry.footer.bottom<=height+top+1,JSON.stringify({width,theme,height,top,geometry}));assert.ok(geometry.description.top>=geometry.form.top&&geometry.description.bottom<=geometry.form.bottom+1,JSON.stringify(geometry));
+     assert.ok(geometry.category.height>=44&&geometry.amount.height>=44&&geometry.description.height>=44);assert.equal(geometry.scroll,0);
     }
     await page.locator('#expense-category').selectOption('snack');
     const details=await page.locator('[data-expense-details]').boundingBox();assert.ok(details.height>=44&&details.width>=44);
-    await page.locator('[data-expense-details]').tap();assert.equal(await page.locator('#expense-dialog').evaluate(el=>el.classList.contains('details-mode')),true);
-    await page.locator('#expense-description').fill('Optional keyboard test');
-    const optional=await page.locator('#expense-description').boundingBox(),actions=await page.locator('#expense-dialog .dialog-inner>.form-actions').boundingBox();
+    await page.locator('#expense-description').tap();await page.locator('#expense-description').fill('Description with keyboard');assert.equal(await page.locator('#expense-dialog').evaluate(el=>el.classList.contains('details-mode')),false);assert.equal(await page.locator('#expense-amount').isVisible(),true);await page.locator('[data-expense-details]').tap();assert.equal(await page.locator('#expense-dialog').evaluate(el=>el.classList.contains('details-mode')),true);
+    await page.locator('#expense-form [name=date]').fill('2026-10-07');
+    const optional=await page.locator('#expense-form [name=date]').boundingBox(),actions=await page.locator('#expense-dialog .dialog-inner>.form-actions').boundingBox();
     assert.ok(optional.y+optional.height<=actions.y);
     await page.locator('[data-expense-details]').tap();assert.equal(await page.evaluate(()=>document.activeElement.id),'expense-amount');
     await page.locator('#expense-dialog [data-close]').tap();await closed(page);await page.evaluate(()=>window.__keyboard(null));
@@ -61,9 +61,9 @@ const fs=require('node:fs'),path=require('node:path'),assert=require('node:asser
    assert.equal((await read(page)).transactions.length,0);
    const interrupted=await page.evaluate(async()=>{document.querySelector('.nav-add').click();await new Promise(requestAnimationFrame);const dialog=document.getElementById('expense-dialog');const before=getComputedStyle(dialog).opacity;dialog.querySelector('[data-close]').click();return {before:Number(before),from:Number(dialog.getAnimations()[0].effect.getKeyframes()[0].opacity),phase:dialog.dataset.motion};});
    assert.equal(interrupted.phase,'closing');assert.ok(Math.abs(interrupted.before-interrupted.from)<.01);await closed(page);
-   await page.locator('.nav-add').tap();await page.locator('#expense-amount').fill('500');await page.locator('#expense-category').selectOption('snack');
+   await page.locator('.nav-add').tap();await page.locator('#expense-amount').fill('500');await page.locator('#expense-category').selectOption('snack');await page.evaluate(()=>window.__keyboard(340));await page.waitForFunction(()=>document.documentElement.classList.contains('keyboard-open'));await page.locator('#expense-description').fill('Direct keyboard expense');
    await page.evaluate(()=>{const form=document.getElementById('expense-form');form.requestSubmit();form.requestSubmit();});await closed(page);
-   let state=await read(page);assert.equal(state.transactions.length,1);assert.equal(state.transactions[0].amount,500000);assert.equal(state.transactions[0].categoryId,'snack');
+   let state=await read(page);assert.equal(state.transactions.length,1);assert.equal(state.transactions[0].amount,500000);assert.equal(state.transactions[0].categoryId,'snack');assert.equal(state.transactions[0].description,'Direct keyboard expense');await page.evaluate(()=>window.__keyboard(null));await page.waitForFunction(()=>!document.documentElement.classList.contains('keyboard-open'));
    await page.locator('.transaction-edit').tap();assert.equal(await page.evaluate(()=>document.activeElement.matches('input,textarea,select')),false);
    await page.locator('#expense-amount').tap();assert.equal(await page.evaluate(()=>document.activeElement.id),'expense-amount');await page.locator('#expense-amount').fill('501');
    await page.locator('.entry-details summary').first().tap();await page.locator('.entry-details summary').first().tap();await page.locator('[name=date]').fill('2026-10-07');
@@ -81,7 +81,17 @@ const fs=require('node:fs'),path=require('node:path'),assert=require('node:asser
    await page.locator('[data-action=theme]').focus();await page.locator('[data-action=theme]').press('Enter');await page.waitForFunction(()=>document.activeElement?.dataset.action==='theme');assert.equal(await page.evaluate(()=>document.documentElement.dataset.theme),theme==='light'?'dark':'light');
    await page.locator('.bottom-nav [data-page=reports]').focus();await page.keyboard.press('Enter');assert.equal(await page.evaluate(()=>document.activeElement.id),'page-title');
    await page.locator('.bottom-nav [data-page=transactions]').tap();assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
-   console.log(`PASS ${width}px ${theme}: Category visible without scrolling at 340–400px keyboard heights, Snack save, Edit without autofocus, keyboard after tapping amount, direct Delete, motion and navigation`);
+   await page.locator('[data-action=add-income]').tap();assert.equal(await page.evaluate(()=>document.activeElement.id),'income-amount');await page.locator('#income-amount').fill('250');await page.waitForFunction(()=>!document.getElementById('income-dialog').dataset.motion);
+   for(const [height,top] of [[400,0],[340,0],[360,75]]){
+    await page.evaluate(([height,top])=>window.__keyboard(height,top),[height,top]);await page.waitForFunction(height=>document.documentElement.style.getPropertyValue('--visible-height')===height+'px',height);
+    const geometry=await page.evaluate(()=>{const rect=selector=>{const r=document.querySelector(selector).getBoundingClientRect();return {top:r.top,bottom:r.bottom,height:r.height};};return {amount:rect('#income-amount'),source:rect('#income-form [name=source]'),description:rect('#income-description'),form:rect('#income-form'),footer:rect('#income-dialog .dialog-inner>.form-actions'),scroll:document.getElementById('income-form').scrollTop};});
+    assert.ok(geometry.amount.top>=top&&geometry.description.bottom<=geometry.form.bottom+1&&geometry.description.bottom<=geometry.footer.top&&geometry.footer.bottom<=height+top+1,JSON.stringify({width,theme,height,top,geometry}));assert.ok(geometry.amount.height>=44&&geometry.source.height>=44&&geometry.description.height>=44);assert.equal(geometry.scroll,0);
+   }
+   await page.locator('#income-form [name=source]').selectOption('freelance');await page.locator('#income-description').tap();await page.locator('#income-description').fill('Direct keyboard income');assert.equal(await page.locator('#income-dialog').evaluate(el=>el.classList.contains('details-mode')),false);assert.equal(await page.locator('#income-amount').isVisible(),true);
+   if(width===390&&theme==='light')await page.screenshot({path:'output/keyboard-income.png'});
+   await page.locator('[data-submit-form=income-form]').tap();await page.waitForFunction(()=>!document.getElementById('income-dialog').open);state=await read(page);assert.equal(state.income.length,1);assert.equal(state.income[0].amount,250000);assert.equal(state.income[0].source,'freelance');assert.equal(state.income[0].title,'Direct keyboard income');await page.evaluate(()=>window.__keyboard(null));await page.waitForFunction(()=>!document.documentElement.classList.contains('keyboard-open'));
+   await page.locator('[data-action=edit-income]').tap();assert.equal(await page.evaluate(()=>document.activeElement.matches('input,textarea,select')),false);assert.equal(await page.locator('#income-description').inputValue(),'Direct keyboard income');await page.locator('#income-description').tap();await page.evaluate(()=>window.__keyboard(340));await page.waitForFunction(()=>document.documentElement.classList.contains('keyboard-open'));await page.locator('#income-description').fill('Edited keyboard income');await page.locator('[data-submit-form=income-form]').tap();await page.waitForFunction(()=>!document.getElementById('income-dialog').open);assert.equal((await read(page)).income[0].title,'Edited keyboard income');await page.evaluate(()=>window.__keyboard(null));await page.waitForFunction(()=>!document.documentElement.classList.contains('keyboard-open'));await page.locator('[data-action=edit-income]').tap();await page.locator('[data-delete-income]').tap();await page.locator('[data-submit-form=confirm-form]').tap();await page.waitForFunction(()=>!document.getElementById('income-dialog').open&&!document.getElementById('confirm-dialog').open);assert.equal((await read(page)).income.length,0);
+   console.log(`PASS ${width}px ${theme}: amount, category/source, description, and Save visible together at 340–400px keyboard heights; direct expense/income entry, edit/delete, optional date, motion and navigation`);
   }finally{await context.close();}
  }
  const {context,page}=await create(390,'light',true);

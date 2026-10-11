@@ -35,8 +35,8 @@ Success means reliable saving, correct balances after every change, fast entry w
 
 - Amount entry defaults to thousands: typing `500` means 500,000. Show the full amount in a live preview and store full numeric values. Preserve exact decimal entry and existing backup values. Do not restore a unit-switch button.
 - Default currency is IDR / Rp, formatted with Indonesian separators, such as Rp2.500.000. Preserve configurable currency and budget-period start day.
-- Amount and category are the essential expense fields. Date defaults to the device's local date; description and note are optional details. Preserve quick expenses and recent-description suggestions.
-- Keep Category reachable without scrolling when the mobile keyboard is open. Optional details may scroll; Save and Delete stay stable outside the scrolling fields and above the keyboard.
+- Amount, category/source, and optional description are immediately visible entry fields. Date defaults to the device's local date; date and note remain optional details. Preserve quick expenses and recent-description suggestions.
+- Keep amount, category/source, and description reachable without scrolling when the mobile keyboard is open. Optional details may scroll; Save and Delete stay stable outside the scrolling fields and above the keyboard.
 - Support adding, editing, deleting, changing categories and dates, search, and category filtering. Choosing a category closes the search/filter panel while retaining the filter.
 - Support monthly overall budgets and optional category budgets. Recalculate spending, remaining budget, category totals, and daily recommendations after every relevant change or import.
 - Budget states use under 70% as normal, 70–90% as caution, 90–100% as warning, and over 100% as over budget. Do not add an On track label to the Makan card or restore the separate Dating card on Read.
@@ -47,6 +47,7 @@ Success means reliable saving, correct balances after every change, fast entry w
 - Preserve JSON export/import, transaction CSV export, and confirmed reset. Preserve historical monthly summaries without inventing individual dates or transactions.
 - The public build starts empty. Never include personal backups, private financial records, passwords, or secret/service-role keys in public assets or Git.
 - Retain the lightweight existing implementation: static HTML, CSS, JavaScript modules, IndexedDB, and a locally bundled Supabase client. Cloudflare Pages serves the dist directory; no app server is required for hosting.
+- Expense and income entry show amount, category/source, and description immediately, fitting above the open keyboard with the Save button. No Details tap or keyboard dismissal is needed for these fields; date and notes remain optional details.
 - Prevent duplicate dialogs and duplicate saves. Pull-to-refresh uses a moving circle and is disabled during expense or income entry, or saving.
 - AI chat is outside the current scope; the user chose to leave it out.
 
