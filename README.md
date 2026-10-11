@@ -10,6 +10,10 @@ SiDompet (formerly Iqbal Saku) is one personal money tracker for starting salary
 - Read shows starting budget, extra income, total expenses, remaining money, and one Money in & out history with editing and deletion. Income has green plus amounts; expenses have red minus amounts. The expense entry flow and category limits are unchanged. Analyze keeps expense breakdowns and uses all available money for overall spending guidance.
 - Both expenses and income follow the configured budget period's start day (1–28). JSON backups, account sync, and offline storage include income. CSV marks expenses, income, and saved salary references distinctly.
 
+## Income sources
+
+In **Settings → Income sources**, rename, add, reorder, or delete the categories used by Add income. Renaming keeps existing records linked to the source. Deleting a source asks where to move its records and leaves amounts, dates, notes, budgets, and remaining money intact. At least one source remains; starting salary stays in Monthly budgets. Sources are included in account sync, offline storage, and JSON backups; search and CSV exports use their saved names. Older backups receive the original source list automatically.
+
 ## Preserving saved data
 
 The existing `saku-expenses-v1` database and Supabase version-1 document remain in use. Old backups without income still restore normally. No backend schema migration is required.
@@ -51,7 +55,7 @@ Open the HTTPS site on an iPhone in Safari, then Share → Add to Home Screen. O
 
 ## Tests and code
 
-Run `npm test` for calculations, expense and income changes, budget periods, migration, backups, and sync using synthetic data. With `npm start` running, use `npm run test:income:browser` for the combined tracker and real service-worker offline checks. Install Playwright Chromium or set `PLAYWRIGHT_EXECUTABLE_PATH` to an installed browser. Existing reports, motion, hardening, and cloud browser tests cover expense regressions; cloud tests simulate Supabase rather than signing into a real user account.
+Run `npm test` for calculations, expense and income changes, budget periods, migration, backups, and sync using synthetic data. With `npm start` running, use `npm run test:income:browser` for the combined tracker and real service-worker offline checks. Install Playwright Chromium or set `PLAYWRIGHT_EXECUTABLE_PATH` to an installed browser. Run `node tests/income-sources-browser.cjs` for source management, backups, and real offline entry. Existing reports, motion, hardening, and cloud browser tests cover expense regressions; cloud tests simulate Supabase rather than signing into a real user account.
 
 - `dist/model.mjs`: numeric values, validation, budgets, reports, and CSV.
 - `dist/income-model.mjs`, `dist/income-ui.mjs`: income validation and entry/history.

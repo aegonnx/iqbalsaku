@@ -1,4 +1,4 @@
-import {validateIncomeFields,sourceName} from './income-model.mjs';
+import {INCOME_SOURCES,validateIncomeFields,sourceName} from './income-model.mjs';
 export const VERSION = 1;
 export const categoryNames = ['Makan','Snack','Dating','Kebutuhan Rumah','Transport','Sosial / Entertainment','Peralatan Kerja','Bantu Ibu','Lain-lain','Paket Data','Sedekah / Sosial'];
 export const categoryIds = ['makan','snack','dating','rumah','transport','entertainment','kerja','ibu','lain','data','sedekah'];
@@ -18,7 +18,7 @@ export function parseAmount(raw) {
 export function seedState() {
   return {version:VERSION,categoryDefaultsVersion:1,settings:{currency:'IDR',startDay:1,defaultBudget:0},
     categories:categoryIds.map((key,i)=>({id:key,name:categoryNames[i],icon:categoryIcons[i],color:categoryColors[i]})),
-    transactions:[],income:[],legacyIncomeImports:[],budgets:{},summaries:{},quickExpenses:[]};
+    transactions:[],income:[],incomeSources:structuredClone(INCOME_SOURCES),legacyIncomeImports:[],budgets:{},summaries:{},quickExpenses:[]};
 }
 export function upgradeState(raw) {
   const state=validateState(raw);
@@ -82,7 +82,7 @@ export function validateState(raw) {
 }
 export function csv(state) {
   const quote=v=>{let s=String(v??'');if(/^[=+\-@\t\r]/.test(s))s="'"+s;return '"'+s.replace(/"/g,'""')+'"';};
-  const rows=[['Date','Description','Category / Source','Amount','Currency','Note','Type'],...state.transactions.slice().sort((a,b)=>a.date.localeCompare(b.date)).map(t=>[t.date,t.description,state.categories.find(c=>c.id===t.categoryId)?.name||'',t.amount,state.settings.currency,t.note,'Expense']),...(state.income||[]).slice().sort((a,b)=>a.date.localeCompare(b.date)).map(t=>[t.date,t.title,sourceName(t.source),t.amount,state.settings.currency,t.note,t.source==='salary'?'Starting salary reference (excluded from extra income)':'Income'])];
+  const rows=[['Date','Description','Category / Source','Amount','Currency','Note','Type'],...state.transactions.slice().sort((a,b)=>a.date.localeCompare(b.date)).map(t=>[t.date,t.description,state.categories.find(c=>c.id===t.categoryId)?.name||'',t.amount,state.settings.currency,t.note,'Expense']),...(state.income||[]).slice().sort((a,b)=>a.date.localeCompare(b.date)).map(t=>[t.date,t.title,sourceName(t.source,state.incomeSources),t.amount,state.settings.currency,t.note,t.source==='salary'?'Starting salary reference (excluded from extra income)':'Income'])];
   return '\uFEFF'+rows.map(row=>row.map(quote).join(',')).join('\r\n');
 }
 

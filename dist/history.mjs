@@ -1,9 +1,9 @@
 import {sourceName} from './income-model.mjs';
 // Index once per state/period. Searching reuses sorted rows and normalized text.
 const createdOrder=t=>typeof t.createdAt==='number'?(new Date(t.createdAt).toJSON()||String(t.createdAt)):String(t.createdAt||'');
-export function indexHistory(rows,categories){
+export function indexHistory(rows,categories,incomeSources){
  const names=new Map(categories.map(c=>[c.id,c.name]));
- return rows.map(t=>({transaction:t,text:[t.description,t.title,t.note,names.get(t.categoryId)||'',t.kind==='income'?sourceName(t.source):''].join(' ').toLocaleLowerCase()}))
+ return rows.map(t=>({transaction:t,text:[t.description,t.title,t.note,names.get(t.categoryId)||'',t.kind==='income'?sourceName(t.source,incomeSources):''].join(' ').toLocaleLowerCase()}))
   .sort((a,b)=>b.transaction.date.localeCompare(a.transaction.date)||createdOrder(b.transaction).localeCompare(createdOrder(a.transaction))||a.transaction.id.localeCompare(b.transaction.id));
 }
 export function historyPage(index,{search='',category='',limit=60}={}){

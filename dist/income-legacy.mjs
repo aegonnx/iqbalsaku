@@ -1,5 +1,5 @@
 import {validateState,expenseMonth} from './model.mjs';
-import {validateIncomeRecord} from './income-model.mjs';
+import {INCOME_SOURCES,validateIncomeRecord} from './income-model.mjs';
 export const LEGACY_APP='iqbal-saku-money-plus';
 export function validateLegacyIncome(raw){
   if(!raw||raw.app!==LEGACY_APP||raw.version!==1||!Array.isArray(raw.entries)||raw.entries.length>100000)throw new Error('Choose a valid saved income backup.');
@@ -21,7 +21,13 @@ export function consolidateIncome(current,legacy){
   const salary=new Map();let added=0;
   for(const entry of entries){
     if(consumed.has(entry.id))continue;
-    consumed.add(entry.id);state.income.push(entry);state.legacyIncomeImports.push({id:entry.id});added++;
+    consumed.add(entry.id);
+    let source=entry.source;
+    if(source!=='salary'&&!state.incomeSources.some(s=>s.id===source)){
+      const original=INCOME_SOURCES.find(s=>s.id===source),matching=state.incomeSources.find(s=>s.name.toLowerCase()===original.name.toLowerCase());
+      if(matching)source=matching.id;else state.incomeSources.push({...original});
+    }
+    state.income.push({...entry,source});state.legacyIncomeImports.push({id:entry.id});added++;
     if(entry.source==='salary'){
       const month=expenseMonth(entry.date,state.settings.startDay);
       salary.set(month,(salary.get(month)||0)+entry.amount);

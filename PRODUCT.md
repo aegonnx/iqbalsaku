@@ -28,6 +28,7 @@ Success means reliable saving, correct balances after every change, fast entry w
 
 - One tracker opens directly at the homepage. Starting salary is the monthly budget; bonuses and other received money add to available funds. Remaining = starting budget + extra income − expenses. Preserve the existing expense flow, category budgets, configured budget periods, sync, and backups.
 - Month navigation arrows have distinct 48-pixel touch targets separated from the center month picker.
+- Settings manages income sources with rename, add, reorder, and delete. Deletion transfers records to a chosen source without changing totals. Sources follow account sync, offline storage, and backups; old documents receive default sources. Starting salary remains a monthly budget.
 - Income supports amount, source, date received, optional description/note, and editing/deletion. Saved Money Plus records migrate idempotently; salary references are excluded from extra income and existing starting budgets are never overwritten. Signed-out device income is imported into an account only by an explicit action.
 
 ## Capabilities and Constraints
