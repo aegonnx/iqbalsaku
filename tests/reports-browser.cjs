@@ -31,14 +31,13 @@ const fs=require('node:fs'),path=require('node:path'),assert=require('node:asser
   await page.reload();await page.locator('.spending-strip').waitFor();assert.deepEqual(await page.locator('.spending-strip>span').evaluateAll(nodes=>nodes.map(node=>getComputedStyle(node).backgroundColor)),categoryColors);
   assert.equal(await page.locator('.report-budget-foot').textContent(),'60.0% usedRp40.000 left');
   await page.locator('[data-page=transactions]').tap();assert.equal(await page.locator('[data-testid=remaining]').textContent(),'Rp40.000');
-  const card=await page.locator('.simple-budget-row').boundingBox(),balance=await page.locator('.simple-balance').boundingBox();assert.equal(card.width,balance.width);
-  assert.ok((await page.locator('.budget-left').textContent()).includes('Rp30.000 left'));
+  assert.equal(await page.locator('.simple-budget-row').count(),0);assert.equal(await page.locator('h2',{hasText:'Money in & out'}).count(),1);
   await page.locator('.bottom-nav [data-page=reports]').tap();
   await page.locator('#selected-month').fill('2026-09');await page.locator('#selected-month').dispatchEvent('change');
   assert.equal(await page.locator('.report-total').textContent(),'Rp125.000');assert.equal(await page.locator('.report-status').textContent(),'Over budget');assert.equal(await page.locator('.category-share small').textContent(),'100.0%');assert.equal(await page.locator('.simple-summary-note').count(),1);
   await page.locator('#selected-month').fill('2026-11');await page.locator('#selected-month').dispatchEvent('change');
   assert.equal(await page.locator('.report-total').textContent(),'Rp0');assert.equal(await page.locator('.spending-strip').count(),0);assert.ok(await page.locator('.empty').isVisible());
   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);assert.deepEqual(errors,[]);
-  await context.close();console.log('PASS '+theme+': report chart percentages, totals, remaining balance, full-width Makan, historical summary, over-budget and empty months');
+  await context.close();console.log('PASS '+theme+': report chart percentages, totals, remaining balance, category budgets remain in reports, no Makan card on Read, historical summary, over-budget and empty months');
  }}finally{await browser.close();}
 })().catch(err=>{console.error(err);process.exitCode=1;});

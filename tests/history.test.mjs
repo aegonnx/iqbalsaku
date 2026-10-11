@@ -20,3 +20,11 @@ test('search and category filters reuse the index and include names and notes',(
  const edited=structuredClone(rows);edited[0].categoryId='snack';edited[0].amount=20000;edited[0].date='2026-11-01';
  const next=historyPage(indexHistory(edited,categories),{category:'snack',limit:200});assert.equal(next.total,690000);assert.equal(next.groups[0].date,'2026-11-01');
 });
+
+test('mixed money history keeps complete separate in/out totals and salary references out of income totals',()=>{
+ const mixed=[{...rows[0],id:'out',amount:1000000,date:'2026-10-10',createdAt:'2026-10-10T10:00:00Z'},
+  {id:'in',kind:'income',amount:500000,date:'2026-10-10',source:'bonus',title:'Work payment',note:'Received',createdAt:Date.parse('2026-10-10T11:00:00Z')},
+  {id:'salary',kind:'income',amount:5000000,date:'2026-10-10',source:'salary',title:'Salary reference',note:'',createdAt:1}];
+ const index=indexHistory(mixed,categories),page=historyPage(index,{limit:1});assert.equal(page.count,3);assert.equal(page.shown,1);assert.equal(page.groups[0].rows[0].id,'in');assert.equal(page.groups[0].incoming,500000);assert.equal(page.groups[0].outgoing,1000000);assert.equal(page.groups[0].references,1);
+ assert.equal(historyPage(index,{category:'@income'}).count,2);assert.equal(historyPage(index,{category:'@expense'}).count,1);assert.equal(historyPage(index,{category:'makan'}).count,1);assert.equal(historyPage(index,{search:'work bonus'}).count,1);assert.equal(historyPage(index,{search:'received'}).count,1);
+});

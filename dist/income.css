@@ -7,9 +7,7 @@
 .balance-actions {display:flex;gap:12px;align-items:center;margin-top:18px;flex-wrap:wrap}
 .balance-actions button {flex:1}
 .balance-actions .text-button {font-size:.8125rem}
-.income-history {margin-top:32px}
 .income-help {margin:8px 0 16px}
-.income-list {padding-block:0}
 .income-row .transaction-meta {white-space:normal;overflow-wrap:anywhere}
 #income-dialog .amount-input {border:1px solid var(--control-border);border-radius:12px}
 @media(max-width:360px){.balance-breakdown {gap:16px 12px}.balance-breakdown strong {font-size:.9375rem}}

@@ -3,10 +3,9 @@ import {amountText,amountFromInput} from './amount-input.mjs';
 import {id,localDate} from './model.mjs';
 import {pinDialogActions} from './mobile-layout.mjs';
 import {openDialog,closeDialog,dialogActive,dialogClosing} from './motion.mjs';
-const receivedDate=value=>new Intl.DateTimeFormat('en-US',{day:'numeric',month:'short'}).format(new Date(value+'T12:00:00'));
 export class IncomeController {
   constructor(context){
-    Object.assign(this,context);this.dialog=document.getElementById('income-dialog');this.limit=30;this.previous=null;
+    Object.assign(this,context);this.dialog=document.getElementById('income-dialog');this.previous=null;
     const dialog=this.dialog;
     dialog.addEventListener('input',event=>{if(event.target.name==='amount'){const amount=amountFromInput(event.target.value);dialog.querySelector('#income-preview').textContent=Number.isFinite(amount)?this.format(amount):'Enter thousands, e.g. 500 for 500.000.';dialog.querySelector('#income-error').textContent='';event.target.removeAttribute('aria-invalid');}});
     dialog.addEventListener('focusin',event=>{if(event.target.matches('input,textarea,select'))this.details(Boolean(event.target.closest('.expense-options')));});
@@ -19,11 +18,9 @@ export class IncomeController {
   }
   saving(){return this.blocked()||this.dialog.querySelector('[data-submit-form]')?.disabled||dialogClosing(this.dialog);}
   details(show){this.dialog.classList.toggle('details-mode',show);const button=this.dialog.querySelector('[data-expense-details]');button.textContent=show?'Amount':'Details';button.setAttribute('aria-expanded',String(show));}
-  history(rows){
-    const {escape:e,format,icon}=this;
-    const sorted=rows.slice().sort((a,b)=>b.date.localeCompare(a.date)||b.createdAt-a.createdAt||a.id.localeCompare(b.id));
-    const count=sorted.filter(t=>t.source!=='salary').length;
-    return '<section class="income-history" aria-labelledby="income-history-title"><div class="section-head"><h2 id="income-history-title">Money received</h2><span class="muted">'+count+' income '+(count===1?'record':'records')+'</span></div><p class="income-help">Starting salary goes in your monthly budget. Bonuses and other income add to it.</p>'+(sorted.length?'<div class="card income-list">'+sorted.slice(0,this.limit).map(t=>'<div class="transaction income-row"><span class="category-icon">'+icon('down')+'</span><div class="transaction-info"><div class="transaction-title">'+e(t.title)+'</div><div class="transaction-meta">'+e(sourceName(t.source))+' · '+e(receivedDate(t.date))+(t.note?' · '+e(t.note):'')+'</div></div><div class="transaction-amount '+(t.source==='salary'?'muted':'income-positive')+'">'+(t.source==='salary'?'':'+')+format(t.amount)+'</div><button class="transaction-edit" data-action="edit-income" data-id="'+e(t.id)+'" aria-label="Edit income '+e(t.title)+'">'+icon('edit')+'</button></div>').join('')+'</div>'+(sorted.some(t=>t.source==='salary')?'<p class="income-help">Saved salary references are preserved here and excluded from extra income. Your starting budget is counted once.</p>':'')+(sorted.length>this.limit?'<button class="secondary full-width" data-action="more-income">Show more income</button>':''):'<div class="card empty">No extra income this month. Add a bonus, payment, or gift when it arrives.</div>')+'</section>';
+  row(t){
+    const {escape:e,format,icon}=this,reference=t.source==='salary';
+    return '<div class="transaction income-row"><span class="category-icon">'+icon('down')+'</span><div class="transaction-info"><div class="transaction-title">'+e(t.title)+'</div><div class="transaction-meta">'+e(sourceName(t.source))+(reference?' · Not extra income':' · Money in')+(t.note?' · '+e(t.note):'')+'</div></div><div class="transaction-amount '+(reference?'muted':'money-in')+'" aria-label="'+e((reference?'Salary reference ':'Income ')+format(t.amount))+'">'+(reference?'':'+')+format(t.amount)+'</div><button class="transaction-edit" data-action="edit-income" data-id="'+e(t.id)+'" aria-label="Edit income '+e(t.title)+'">'+icon('edit')+'</button></div>';
   }
   open(existing=null){
     if(this.blocked()||dialogActive(this.dialog))return;
@@ -52,7 +49,6 @@ export class IncomeController {
   action(action,key){
     if(action==='add-income'){this.open();return true;}
     if(action==='edit-income'){const record=this.getState().income.find(t=>t.id===key);if(record)this.open(record);return true;}
-    if(action==='more-income'){this.limit+=30;this.render();return true;}
     return false;
   }
 }

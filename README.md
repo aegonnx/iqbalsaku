@@ -1,13 +1,13 @@
-# Iqbal Saku
+# SiDompet
 
-One personal money tracker for starting salary, extra income, expenses, and budgets. The homepage opens the tracker directly. Vanilla HTML, CSS, and JavaScript; the official Supabase client is bundled locally for account sync.
+SiDompet (formerly Iqbal Saku) is one personal money tracker for starting salary, extra income, expenses, and budgets. The homepage opens the tracker directly. Vanilla HTML, CSS, and JavaScript; the official Supabase client is bundled locally for account sync.
 
 ## Starting budget and extra income
 
 - In Settings → Monthly budgets, manually enter the selected month's starting budget / salary. `5000` means Rp5.000.000. Category budgets remain separate spending limits.
 - Use **Add income** on Read when a bonus, freelance payment, gift, refund, or other income arrives. Enter amount, source, and date received; description and note are optional. The existing thousands input and rupiah preview also apply to income.
 - Remaining money = starting budget + extra income − expenses. Rp5.000.000 salary + Rp500.000 bonus − Rp1.000.000 expenses leaves Rp4.500.000. Salary is entered as the starting budget only, never as extra income.
-- Read shows starting budget, extra income, total expenses, remaining money, and income history with editing and deletion. The expense entry flow and category limits are unchanged. Analyze keeps expense breakdowns and uses all available money for overall spending guidance.
+- Read shows starting budget, extra income, total expenses, remaining money, and one Money in & out history with editing and deletion. Income has green plus amounts; expenses have red minus amounts. The expense entry flow and category limits are unchanged. Analyze keeps expense breakdowns and uses all available money for overall spending guidance.
 - Both expenses and income follow the configured budget period's start day (1–28). JSON backups, account sync, and offline storage include income. CSV marks expenses, income, and saved salary references distinctly.
 
 ## Preserving saved data
@@ -20,17 +20,21 @@ Previously saved salary records are preserved as references, excluded from extra
 
 Signed-out device data remains separate from signed-in accounts. In Settings → Your data, **Import saved income into this account** merges the old device income into the selected account without replacing expense records or existing budgets. Importing a Money Plus JSON backup performs the same merge. An ordinary tracker JSON restore replaces financial records after confirmation and retains the import ledger to avoid bringing back already-consumed legacy data.
 
+## Appearance and month navigation
+
+Settings → Color palette offers Jade and Ocean blue. The selection is remembered on this device and works in both light and dark themes. The month arrows have separate 48-pixel touch targets, with a gap and a contained center month picker. The visible brand, browser title, and install name are SiDompet; existing database names, backup format, PWA identity, and saved theme preferences are retained.
+
 ## Run locally
 
 Requires Node.js 20 or newer. Run `npm start`, then open `http://localhost:4173`.
 
 ## Daily use
 
-- Read shows the remaining monthly money, a full-width Makan budget card with its recommended daily allowance, and expenses grouped by date.
+- Read shows the remaining monthly money, money in and out grouped by date. Category budgets remain available in Settings and Analyze.
 - Add expenses from the center button in the bottom navigation. Amount and category are required; description, date, and note are optional details.
 - Analyze shows spending by category and budget status. The settings button contains budgets, categories, quick entries, and backups.
 - All money inputs default to thousands: `500` stores 500,000 and `10` stores 10,000. `10k` also works. The live preview shows the full amount; existing records and backups retain full numeric values. IDR displays with Indonesian separators.
-- The date defaults to the device's local date. Daily recommendations divide the remaining category budget by days after today, or the full period for future months.
+- The date defaults to the device's local date. Daily recommendations divide the remaining available money by days after today, or the full period for future months.
 - Selecting a category closes the filter panel while keeping the results filtered. Month labels use Jan, Feb, Sep, Oct, and similar abbreviations.
 
 ## Data
@@ -89,6 +93,8 @@ Navigation, disclosures, theme colors, and pull-refresh use restrained 180–240
 
 ## Visual design
 
-The Taste redesign uses white and graphite surfaces with a single jade accent in both themes. Read emphasizes remaining balance and the daily Makan allowance; Analyze shows total spending, a segmented category chart and daily guidance. `dist/design.css` owns the visual layer while the original stylesheet retains keyboard layout mechanics. DESIGN.md records the visual decisions. Income uses the same version-1 financial document and account sync as expenses.
+The Taste redesign uses white and graphite surfaces with a single jade accent in both themes. Read emphasizes remaining balance and a combined money history; Analyze shows total spending, a segmented category chart and daily guidance. `dist/design.css` owns the visual layer while the original stylesheet retains keyboard layout mechanics. DESIGN.md records the visual decisions. Income uses the same version-1 financial document and account sync as expenses.
 
-`node tests/reports-browser.cjs` verifies chart percentages, complete totals, full-width Makan layout, historical summaries, over-budget states and empty months in both themes using synthetic data.
+`node tests/reports-browser.cjs` verifies chart percentages, complete totals, category budgets, historical summaries, over-budget states and empty months in both themes using synthetic data.
+
+`node tests/appearance-browser.cjs` verifies the SiDompet brand, remembered palette, money-in/out colors and filters, and the full month-arrow touch targets at 320/390/430 pixels in both themes.

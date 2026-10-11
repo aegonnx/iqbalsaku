@@ -1,7 +1,7 @@
 {
   "id": "./",
-  "name": "Iqbal Saku",
-  "short_name": "Iqbal Saku",
+  "name": "SiDompet",
+  "short_name": "SiDompet",
   "description": "Your expenses, starting salary, and extra income in one tracker",
   "start_url": "./",
   "scope": "./",

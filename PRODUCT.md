@@ -1,4 +1,4 @@
-# Iqbal Saku
+# SiDompet
 
 <!-- impeccable:product-schema 1 -->
 
@@ -21,12 +21,13 @@ Success means reliable saving, correct balances after every change, fast entry w
 - Design primarily for an iPhone-sized screen and one-handed use. Android mobile browsers and desktop browsers must remain usable; larger screens retain the compact phone-oriented flow.
 - The app can be installed as a PWA and used offline after its shell has been cached.
 - The main navigation is Read, Add, and Analyze. Settings are reached through the top settings button.
-- Read prioritizes remaining monthly budget, followed by total spending, one full-width Makan budget card with its daily allowance, and expenses grouped by date.
+- Read prioritizes remaining monthly budget, followed by starting budget, extra income, total spending, and a combined Money in & out history grouped by date. Category budgets stay in Settings and Analyze.
 - Add is the central bottom-navigation action. Edit opens without activating the keyboard; tapping a field starts editing, and Delete is immediately available.
 - Analyze provides monthly totals, category breakdowns, budget comparisons, and spending guidance. Month navigation uses short title-case labels such as Sep and Oct.
 - Optional Supabase sign-in keeps account expenses and income available across devices. Signed-out device records and signed-in account records remain separate. Moving device records into an account requires importing a backup after signing in.
 
 - One tracker opens directly at the homepage. Starting salary is the monthly budget; bonuses and other received money add to available funds. Remaining = starting budget + extra income − expenses. Preserve the existing expense flow, category budgets, configured budget periods, sync, and backups.
+- Month navigation arrows have distinct 48-pixel touch targets separated from the center month picker.
 - Income supports amount, source, date received, optional description/note, and editing/deletion. Saved Money Plus records migrate idempotently; salary references are excluded from extra income and existing starting budgets are never overwritten. Signed-out device income is imported into an account only by an explicit action.
 
 ## Capabilities and Constraints
@@ -50,9 +51,9 @@ Success means reliable saving, correct balances after every change, fast entry w
 
 ## Brand Commitments
 
-- Keep the name Iqbal Saku in the app, browser tab, and installation metadata.
+- Use SiDompet in the app header, browser tab, and installation metadata. Keep existing database/storage keys and PWA identity to preserve user data.
 - Preserve the user's direction: modern, minimal, professional, uncluttered, and mobile-first, with clear hierarchy and distinct expense rows.
-- White is the default theme. Keep the top theme switch, the dark alternative, and the remembered choice.
+- White is the default theme. Keep the top theme switch, the dark alternative, and the remembered choice. Offer Jade and Ocean blue palette options in Settings; keep income green and expenses red in either palette.
 - Use neutral transaction wording. Do not add report-source labels or notes to imported expenses.
 - Keep the simple Read / Add / Analyze terminology. Use plain, practical interface copy.
 
@@ -70,7 +71,7 @@ Success means reliable saving, correct balances after every change, fast entry w
 ## Product Principles
 
 1. Make daily expense entry fast and require as little typing as possible.
-2. Make the remaining budget and food allowance understandable at a glance.
+2. Make remaining money, income, and spending understandable at a glance.
 3. Preserve financial data and calculation accuracy through edits, imports, offline use, and sync.
 4. Keep phone interactions stable and predictable, especially when the keyboard opens.
 5. Improve within the simple established workflow; add complexity only when the user requests it.

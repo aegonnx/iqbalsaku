@@ -186,3 +186,25 @@ dialog::backdrop {background:#10261ed0}
 @media(prefers-reduced-motion:reduce) {
  *,*::before,*::after {animation:none!important;transition:none!important;scroll-behavior:auto!important}
 }
+
+/* A second accent palette keeps income/expense colors semantic in both themes. */
+:root[data-palette="blue"] {
+ --primary:#235bb7;--primary-hover:#18468f;--focus:#235bb7;
+ --blue-soft:#edf3ff;--hero:#eef3fb;--progress-track:#dce5f4;
+ --shadow-nav:0 6px 28px #2446761a;
+ --chart-1:#235bb7;--chart-2:#4475b6;--chart-3:#688cad;
+}
+:root[data-palette="blue"][data-theme="dark"] {
+ --primary:#a0bfff;--primary-hover:#c1d4ff;--on-primary:#162642;--focus:#a0bfff;
+ --blue-soft:#263b59;--hero:#222d41;--progress-track:#3b4c65;
+ --chart-1:#a0bfff;--chart-2:#88aadc;--chart-3:#8aa5bc;
+}
+.money-in {color:var(--success)}
+.money-out {color:var(--danger)}
+/* Separate arrow targets from the native month input's invisible hit area. */
+.month-control {gap:8px;background:transparent;isolation:isolate}
+.month-control button {position:relative;z-index:2;flex:0 0 48px;width:48px;min-height:48px;background:var(--surface-raised);border-radius:12px;touch-action:manipulation}
+.heading-row>.month-control .month-picker {flex:0 1 96px;min-width:88px;width:96px;min-height:48px;overflow:hidden;isolation:isolate;background:var(--surface-raised);border-radius:12px}
+.month-picker input {max-width:100%;z-index:1;clip-path:inset(0 round 12px)}
+.month-picker>span {pointer-events:none}
+@media(max-width:350px){.heading-row>.month-control .month-picker {flex:1;max-width:160px}}
