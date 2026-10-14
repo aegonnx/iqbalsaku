@@ -138,6 +138,8 @@ h2 {font-size:1.125rem;letter-spacing:-.025em;font-weight:600}
 .control-notice.caution h2 {color:var(--warning)}
 .control-notice.over h2 {color:var(--danger)}
 .control-notice p {font-size:.875rem;line-height:1.75;color:var(--text);margin-top:8px;overflow-wrap:anywhere}
+.control-notice .overview-collapsed {display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:3;overflow:hidden}
+.control-notice .overview-toggle {display:block;margin-top:8px;text-align:left}
 .simple-more {padding:0;border:0;border-top:1px solid var(--line);border-radius:0}
 .simple-more>summary {padding:16px 0;font-weight:500}
 .simple-more .transaction {background:var(--expense-surface);border:0;border-radius:12px;padding:14px 10px;margin-top:8px}

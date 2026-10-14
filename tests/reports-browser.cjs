@@ -28,6 +28,11 @@ const fs=require('node:fs'),path=require('node:path'),assert=require('node:asser
   assert.match(await page.locator('.control-notice p').textContent(),/ahead of an even daily pace/);
   assert.ok((await page.locator('.control-notice p').textContent()).length>200);
   assert.equal(await page.locator('.report-status').textContent(),'Keep an eye on spending');
+  const toggle=page.locator('[data-action=toggle-overview]'),copy=page.locator('#spending-overview-copy');
+  assert.equal(await toggle.getAttribute('aria-expanded'),'false');
+  const collapsedHeight=(await copy.boundingBox()).height;
+  await toggle.tap();assert.equal(await toggle.textContent(),'Read less');assert.equal(await toggle.getAttribute('aria-expanded'),'true');assert.ok((await copy.boundingBox()).height>collapsedHeight);
+  await toggle.tap();assert.equal(await toggle.textContent(),'Read more');assert.equal(await toggle.getAttribute('aria-expanded'),'false');assert.equal((await copy.boundingBox()).height,collapsedHeight);
   if(theme==='dark'){fs.mkdirSync('tmp',{recursive:true});await page.locator('.control-notice').screenshot({path:'tmp/spending-overview-preview.png'});}
   assert.equal(await page.locator('.spending-strip>span').count(),3);
   assert.deepEqual(await page.locator('.category-share small').allTextContents(),['50.0%','33.3%','16.7%']);
