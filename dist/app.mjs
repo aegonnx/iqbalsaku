@@ -75,6 +75,10 @@ function transactionRow(t,showDate=false){
  return '<div class="transaction">'+categoryIcon(t.categoryId)+'<div class="transaction-info"><div class="transaction-title">'+e(t.description)+'</div><div class="transaction-meta">'+e(cat(t.categoryId)?.name)+(showDate?' · '+shortDate(t.date):'')+(t.note?' · '+e(t.note):'')+'</div></div><div class="transaction-amount money-out" aria-label="'+e('Expense '+format(t.amount))+'">−'+format(t.amount)+'</div><button class="transaction-edit" data-action="edit" data-id="'+e(t.id)+'" aria-label="Edit '+e(t.description)+'">'+icon('edit')+'</button></div>';
 }
 function themeColor(key){return 'var(--category-'+categoryTone(key)+')';}
+function categoryReport(c,m,count){
+ const amount=m.categories[c.id],pct=amount/m.spent*100,limit=m.budget.categories[c.id];
+ return '<div class="category-report-item"><div class="category-report-row">'+categoryIcon(c.id)+'<div class="category-report-info"><div class="distribution-label"><span>'+e(c.name)+'</span><strong>'+format(amount)+'</strong></div><div class="category-share"><div class="share-track" aria-hidden="true"><span style="width:'+pct+'%;background:'+themeColor(c.id)+'"></span></div><small>'+pct.toFixed(1)+'%</small></div>'+(limit!==undefined?'<small class="category-limit '+(amount>limit?'negative':'')+'">'+format(Math.abs(limit-amount))+(amount>limit?' over budget':' remaining of '+format(limit))+'</small>':'')+'</div></div><details class="category-expenses" data-category="'+e(c.id)+'"><summary>'+(count?'View '+count+' '+(count===1?'expense':'expenses'):'View details')+'<span class="sr-only"> in '+e(c.name)+'</span></summary><div class="category-expenses-list"></div></details></div>';
+}
 function distribution(m,all=false){
  const ordered=state.categories.slice().sort((a,b)=>(m.categories[b.id]||0)-(m.categories[a.id]||0));
  return ordered.filter(c=>(m.categories[c.id]||0)>0).map(c=>{const amount=m.categories[c.id]||0;const pct=m.spent?amount/m.spent*100:0;return '<div class="distribution-row"><div class="distribution-label"><span><i class="legend-dot" style="background:'+themeColor(c.id)+'"></i>'+e(c.name)+'</span><strong>'+format(amount)+'</strong></div><div class="progress"><span style="width:'+pct+'%;background:'+themeColor(c.id)+'"></span></div>'+(all?'<small>'+pct.toFixed(1)+'% of spending</small>':'')+'</div>';}).join('')||'<div class="empty">No spending yet this month.</div>';
@@ -93,6 +97,7 @@ function transactions(){
 }
 function reports(){
  const m=metrics(state,month),status=budgetState(m.spent,Math.max(0,m.spendable));
+ const expenseCounts={};for(const row of m.rows)expenseCounts[row.categoryId]=(expenseCounts[row.categoryId]||0)+1;
  const ranked=state.categories.filter(c=>(m.categories[c.id]||0)>0).sort((a,b)=>m.categories[b.id]-m.categories[a.id]);
  const large=m.rows.slice().sort((a,b)=>b.amount-a.amount).slice(0,3);
  const overview=spendingOverview(state,m,{format});
@@ -100,8 +105,8 @@ function reports(){
  const segments=ranked.map(c=>'<span style="flex:'+m.categories[c.id]+';background:'+themeColor(c.id)+'"></span>').join('');
  return '<section class="report-overview" aria-labelledby="report-total-title"><div class="report-status '+status+'">'+headline+'</div><h2 id="report-total-title">Total spending</h2><p class="report-total">'+displayMoney(m.spent)+'</p><div class="report-budget"><span>Available to spend</span><strong>'+format(m.spendable)+'</strong></div>'+progress(m.spent,Math.max(0,m.spendable))+'<div class="report-budget-foot"><span>'+(m.spendable>0?m.percent.toFixed(1)+'% used':'No money available')+'</span><strong class="'+(m.remaining<0?'negative':'')+'">'+format(Math.abs(m.remaining))+(m.remaining<0?' over':' left')+'</strong></div></section>'+
  '<section class="control-notice '+overview.tone+'" aria-labelledby="spending-overview-title"><h2 id="spending-overview-title">Spending overview</h2><p id="spending-overview-copy" class="overview-collapsed">'+e(overview.text)+'</p><button type="button" class="text-button overview-toggle" data-action="toggle-overview" aria-expanded="false" aria-controls="spending-overview-copy">Read more</button></section>'+
- '<section class="category-report"><div class="section-head"><h2>Where it went</h2><span class="muted">'+ranked.length+' categories</span></div>'+(ranked.length?'<div class="spending-strip" aria-hidden="true">'+segments+'</div><p class="biggest-category"><strong>'+e(ranked[0].name)+'</strong> leads at '+Math.round(m.categories[ranked[0].id]/m.spent*100)+'% of spending.</p><div class="category-breakdown">'+ranked.map(c=>{const amount=m.categories[c.id],pct=amount/m.spent*100,limit=m.budget.categories[c.id];return '<div class="category-report-row">'+categoryIcon(c.id)+'<div class="category-report-info"><div class="distribution-label"><span>'+e(c.name)+'</span><strong>'+format(amount)+'</strong></div><div class="category-share"><div class="share-track" aria-hidden="true"><span style="width:'+pct+'%;background:'+themeColor(c.id)+'"></span></div><small>'+pct.toFixed(1)+'%</small></div>'+(limit!==undefined?'<small class="category-limit '+(amount>limit?'negative':'')+'">'+format(Math.abs(limit-amount))+(amount>limit?' over budget':' remaining of '+format(limit))+'</small>':'')+'</div></div>';}).join('')+'</div>':'<div class="empty"><h3>No spending to analyze yet</h3><p>Add your first expense using the + button below.</p></div>')+'</section>'+
- (m.summary?'<p class="simple-summary-note">'+monthName()+' includes your monthly summary of '+format(m.summary.total)+'. Individual expenses were not supplied.</p>':'')+
+ '<section class="category-report"><div class="section-head"><h2>Where it went</h2><span class="muted">'+ranked.length+' categories</span></div>'+(ranked.length?'<div class="spending-strip" aria-hidden="true">'+segments+'</div><p class="biggest-category"><strong>'+e(ranked[0].name)+'</strong> leads at '+Math.round(m.categories[ranked[0].id]/m.spent*100)+'% of spending.</p><div class="category-breakdown">'+ranked.map(c=>categoryReport(c,m,expenseCounts[c.id]||0)).join('')+'</div>':'<div class="empty"><h3>No spending to analyze yet</h3><p>Add your first expense using the + button below.</p></div>')+'</section>'+
+ (m.summary?'<p class="simple-summary-note">'+monthName()+' includes a saved monthly summary of '+format(m.summary.total)+' in addition to any listed expenses. Summary amounts have no individual expense records.</p>':'')+
  (large.length?'<details class="card simple-more"><summary>Biggest expenses</summary>'+large.map(t=>transactionRow(t,true)).join('')+'</details>':'');
 }
 function settings(){
@@ -188,6 +193,14 @@ function confirmIncomeImport(saved){
  showConfirm('Import saved income?', 'Add '+preview.added+' saved records to '+(cloud.user?'this account':'this tracker')+'? Expenses and existing budgets stay in place. Saved salary is counted only as the starting budget, never as extra income.','',async()=>{await commit(next=>{const result=consolidateIncome(next,saved);Object.assign(next,result.state);});notify('Saved income imported');},'Import income');
 }
 app.addEventListener('click',async ev=>{const button=ev.target.closest('[data-action]');if(!button)return;try{await doAction(button);}catch(err){notify(errorMessage(err));}});
+app.addEventListener('toggle',ev=>{
+ const details=ev.target;if(!details.matches?.('.category-expenses')||!details.open||details.dataset.loaded)return;
+ const m=metrics(state,month),key=details.dataset.category;
+ const rows=m.rows.filter(t=>t.categoryId===key).sort((a,b)=>b.amount-a.amount||b.date.localeCompare(a.date)||a.id.localeCompare(b.id));
+ const summary=m.summary?.categories[key]||0;
+ details.querySelector('.category-expenses-list').innerHTML=(summary?'<p class="category-summary-note">Monthly summary: '+format(summary)+'. No individual expense records were supplied for this amount.</p>':'')+(rows.length?'<p class="category-expense-order muted">Highest to lowest amount</p>'+rows.map(t=>transactionRow(t,true)).join(''):'<p class="muted">No individual expenses recorded in this category for the selected period.</p>');
+ details.dataset.loaded='true';
+},true);
 app.addEventListener('input',ev=>{if(ev.target.id==='transaction-search'){search=ev.target.value;historyLimit=60;document.getElementById('history-list').innerHTML=historyBody();}});
 app.addEventListener('change',async ev=>{
  if(ev.target.id==='color-palette'){applyPalette(ev.target.value);notify('Palette saved');}
