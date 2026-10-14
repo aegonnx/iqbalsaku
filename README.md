@@ -12,7 +12,7 @@ mySaku (formerly Iqbal Saku) is one personal money tracker for starting salary, 
 
 ## Emergency funds
 
-The dashboard shows Emergency funds in place of Total available. Set the amount in **Settings → Monthly budgets**, directly below starting budget / salary, using thousands (500 = Rp500.000). The reserve reduces remaining money and daily spending guidance without creating an expense or changing category totals. It is saved for the selected budget period, defaults to zero for older records and new months, and is included in account sync, offline storage, and JSON backups. Clear the field or enter zero to release the reserve.
+The dashboard shows Emergency funds in place of Total available. Set the amount in **Settings → Monthly budgets**, directly below starting budget / salary, using thousands (500 = Rp500.000). The reserve reduces remaining money without creating an expense or changing category totals. It is saved for the selected budget period, defaults to zero for older records and new months, and is included in account sync, offline storage, and JSON backups. Clear the field or enter zero to release the reserve.
 
 ## Income sources
 
@@ -42,7 +42,7 @@ Requires Node.js 20 or newer. Run `npm start`, then open `http://localhost:4173`
 - Add expenses from the center button in the bottom navigation. Amount and category are required. Description is optional and immediately visible beside these fields; date and note are optional details.
 - Analyze shows spending by category and budget status. The settings button contains budgets, categories, quick entries, and backups.
 - All money inputs default to thousands: `500` stores 500,000 and `10` stores 10,000. `10k` also works. The live preview shows the full amount; existing records and backups retain full numeric values. IDR displays with Indonesian separators.
-- The date defaults to the device's local date. Daily recommendations divide the remaining available money by days after today, or the full period for future months.
+- The date defaults to the device's local date.
 - Selecting a category closes the filter panel while keeping the results filtered. Month labels use Jan, Feb, Sep, Oct, and similar abbreviations.
 
 ## Data

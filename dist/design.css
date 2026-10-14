@@ -115,13 +115,6 @@ h2 {font-size:1.125rem;letter-spacing:-.025em;font-weight:600}
 .report-budget strong {font-weight:500;color:var(--text)}
 .report-overview>.progress {margin:12px 0}
 .report-budget-foot strong {font-weight:500;color:var(--primary)}
-.daily-guidance {display:grid;grid-template-columns:1fr 1fr;background:var(--hero);border-radius:16px;padding:20px;gap:16px}
-.daily-guidance>div {display:flex;flex-direction:column;align-items:start;min-width:0;gap:6px}
-.daily-guidance>div+div {border-left:1px solid var(--progress-track);padding-left:16px}
-.daily-guidance span {font-size:.8125rem;color:var(--muted);line-height:1.5}
-.daily-guidance strong {font-size:1.25rem;letter-spacing:-.03em;font-weight:500;font-family:Outfit,var(--font-body);overflow-wrap:anywhere;max-width:100%;margin-top:auto}
-.daily-guidance>div:last-child strong {color:var(--primary)}
-.daily-guidance small {font-size:.75rem}
 .category-report {padding-top:4px}
 .category-report .section-head {margin-bottom:16px}
 .category-report .section-head>.muted {font-size:.8125rem}
@@ -167,9 +160,6 @@ dialog::backdrop {background:#10261ed0}
  .app-shell {padding-inline:16px}
  .heading-row {flex-wrap:wrap}
  .heading-row>.month-control {width:100%;justify-content:space-between}
- .daily-guidance {padding:16px;gap:12px}
- .daily-guidance>div+div {padding-left:12px}
- .daily-guidance strong {font-size:1.125rem}
  .simple-budget-row {padding:16px;column-gap:8px}
  .transaction .category-icon {display:none}
  .transaction-amount {max-width:38%}
