@@ -53,7 +53,17 @@ Expenses and income persist in IndexedDB on each device. Sign in through Setting
 
 ## Cloudflare Pages
 
-Deploy the `dist` folder as a static website. For Git integration, select `main`, framework preset **None**, build command `exit 0`, and output directory `dist`. No server or environment variables are required.
+### Ask AI (Qwen)
+
+Analyze includes an Ask AI assistant, suggested questions, and a question/answer form. It uses `qwen/qwen3.8-27b:free` via OpenRouter, with no paid fallback. Users must sign in and explicitly agree to send their question, selected month's totals, period, and category names. Transaction descriptions, notes, email, and individual records are excluded. Replies are rendered as plain text and cannot modify financial records. Each question is independent; chat history is not sent or saved. Internet access is required.
+
+Deploy from the repository with `functions/` at the project root and `dist` as the output directory so Cloudflare builds the `/api/ai` Pages Function. Uploading only `dist` does not deploy the AI backend. Add an **encrypted secret** named `OPENROUTER_API_KEY` in Cloudflare Pages settings, and bind a Workers KV namespace named `AI_QUOTA`, then redeploy. Never place the API key in `dist`, browser storage, or a Git commit. Without the secret or KV binding, the assistant displays a setup message.
+
+The backend verifies Supabase sessions against the same project as the app, bounds question/request size, restricts request origin, sets timeouts, and attempts to cap usage to five requests per user and forty requests across the app per UTC day. KV counters are best-effort because concurrent requests and eventual consistency can exceed these caps; they are not a strict quota guarantee. Provider limits also apply and free model availability can change. Keep the OpenRouter account restricted to free use; failed provider attempts count toward the app allowance. Review OpenRouter and the selected provider's data policies before enabling financial summaries.
+
+For local use, copy `.env.example` to `.env`, set the key, and run `node --env-file=.env server.cjs`. Local quotas are in memory and reset when the server restarts. Sign in through Settings before asking questions. Automated AI tests mock Supabase and OpenRouter; live answers require a configured key.
+
+For Git integration, select `main`, framework preset **None**, build command `exit 0`, and output directory `dist`. The tracker itself requires no server or environment variables; Ask AI additionally needs the Pages Function, secret, and KV binding described above.
 
 Open the HTTPS site on an iPhone in Safari, then Share → Add to Home Screen. Open it once online to cache the app for offline use. Import your private JSON backup on the device where you want to track expenses.
 

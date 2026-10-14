@@ -115,6 +115,12 @@ h2 {font-size:1.125rem;letter-spacing:-.025em;font-weight:600}
 .report-budget strong {font-weight:500;color:var(--text)}
 .report-overview>.progress {margin:12px 0}
 .report-budget-foot strong {font-weight:500;color:var(--primary)}
+.ai-card p {margin:8px 0 16px}
+#ai-dialog {width:min(540px,calc(100% - 24px));max-height:85dvh;overflow:auto}
+.ai-suggestions {display:flex;flex-wrap:wrap;gap:8px;margin:16px 0}
+.ai-consent {display:flex;align-items:start;gap:10px;font-size:.8125rem;margin:16px 0}
+.ai-consent input {flex:0 0 auto;width:18px;height:18px;margin-top:3px}
+.ai-answer {white-space:pre-wrap;overflow-wrap:anywhere;margin-top:16px}
 .category-report {padding-top:4px}
 .category-report .section-head {margin-bottom:16px}
 .category-report .section-head>.muted {font-size:.8125rem}
