@@ -21,12 +21,13 @@ Success means reliable saving, correct balances after every change, fast entry w
 - Design primarily for an iPhone-sized screen and one-handed use. Android mobile browsers and desktop browsers must remain usable; larger screens retain the compact phone-oriented flow.
 - The app can be installed as a PWA and used offline after its shell has been cached.
 - The main navigation is Read, Add, and Analyze. Settings are reached through the top settings button.
-- Read prioritizes remaining monthly budget, followed by starting budget, extra income, total spending, and a combined Money in & out history grouped by date. Category budgets stay in Settings and Analyze.
+- Read prioritizes remaining monthly budget, followed by starting budget, extra income, total spending, emergency funds, and a combined Money in & out history grouped by date. Category budgets stay in Settings and Analyze.
 - Add is the central bottom-navigation action. Edit opens without activating the keyboard; tapping a field starts editing, and Delete is immediately available.
 - Analyze provides monthly totals, category breakdowns, budget comparisons, and spending guidance. Month navigation uses short title-case labels such as Sep and Oct.
 - Optional Supabase sign-in keeps account expenses and income available across devices. Signed-out device records and signed-in account records remain separate. Moving device records into an account requires importing a backup after signing in.
 
-- One tracker opens directly at the homepage. Starting salary is the monthly budget; bonuses and other received money add to available funds. Remaining = starting budget + extra income − expenses. Preserve the existing expense flow, category budgets, configured budget periods, sync, and backups.
+- One tracker opens directly at the homepage. Starting salary is the monthly budget; bonuses and other received money add to available funds. Remaining = starting budget + extra income − expenses − emergency funds. Preserve the existing expense flow, category budgets, configured budget periods, sync, and backups.
+- Emergency funds replace Total available on Read and are set per budget period beside the starting budget in Settings. Reserves reduce remaining money and daily spending guidance, never expenses or category totals. Old and unset budgets use zero; sync, offline storage, and JSON backups preserve the reserve.
 - Month navigation arrows have distinct 48-pixel touch targets separated from the center month picker.
 - Settings manages income sources with rename, add, reorder, and delete. Deletion transfers records to a chosen source without changing totals. Sources follow account sync, offline storage, and backups; old documents receive default sources. Starting salary remains a monthly budget.
 - Income supports amount, source, date received, optional description/note, and editing/deletion. Saved Money Plus records migrate idempotently; salary references are excluded from extra income and existing starting budgets are never overwritten. Signed-out device income is imported into an account only by an explicit action.

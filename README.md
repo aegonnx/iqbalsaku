@@ -6,9 +6,13 @@ mySaku (formerly Iqbal Saku) is one personal money tracker for starting salary, 
 
 - In Settings → Monthly budgets, manually enter the selected month's starting budget / salary. `5000` means Rp5.000.000. Category budgets remain separate spending limits.
 - Use **Add income** on Read when a bonus, freelance payment, gift, refund, or other income arrives. Enter amount, source, and date received; description and note are optional. The existing thousands input and rupiah preview also apply to income.
-- Remaining money = starting budget + extra income − expenses. Rp5.000.000 salary + Rp500.000 bonus − Rp1.000.000 expenses leaves Rp4.500.000. Salary is entered as the starting budget only, never as extra income.
+- Remaining money = starting budget + extra income − expenses − emergency funds. Rp5.000.000 salary + Rp500.000 bonus − Rp1.000.000 expenses leaves Rp4.500.000. Salary is entered as the starting budget only, never as extra income.
 - Read shows starting budget, extra income, total expenses, remaining money, and one Money in & out history with editing and deletion. Income has green plus amounts; expenses have red minus amounts. The expense entry flow and category limits are unchanged. Analyze keeps expense breakdowns and uses all available money for overall spending guidance.
 - Both expenses and income follow the configured budget period's start day (1–28). JSON backups, account sync, and offline storage include income. CSV marks expenses, income, and saved salary references distinctly.
+
+## Emergency funds
+
+The dashboard shows Emergency funds in place of Total available. Set the amount in **Settings → Monthly budgets**, directly below starting budget / salary, using thousands (500 = Rp500.000). The reserve reduces remaining money and daily spending guidance without creating an expense or changing category totals. It is saved for the selected budget period, defaults to zero for older records and new months, and is included in account sync, offline storage, and JSON backups. Clear the field or enter zero to release the reserve.
 
 ## Income sources
 

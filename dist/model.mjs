@@ -41,7 +41,7 @@ export function expenseMonth(date,startDay=1) {
   const [y,m,d]=date.split('-').map(Number);const dt=new Date(y,m-1-(d<startDay?1:0),1);
   return localDate(dt).slice(0,7);
 }
-export function budgetFor(state,month) { return state.budgets[month] || {overall:state.settings.defaultBudget,categories:{}}; }
+export function budgetFor(state,month) { const budget=state.budgets[month] || {overall:state.settings.defaultBudget,categories:{}};return {...budget,emergencyFunds:budget.emergencyFunds??0}; }
 export function metrics(state,month,today=localDate()) {
   const range=period(month,state.settings.startDay), rows=state.transactions.filter(t=>t.date>=range.start&&t.date<range.end);
   const summary=state.summaries[month]; const categories=Object.fromEntries(state.categories.map(c=>[c.id,summary?.categories[c.id]||0]));
@@ -49,11 +49,11 @@ export function metrics(state,month,today=localDate()) {
   const spent=rows.reduce((n,t)=>n+t.amount,summary?.total||0);const budget=budgetFor(state,month);
   const incomeRows=(state.income||[]).filter(t=>t.date>=range.start&&t.date<range.end);
   const extraIncome=incomeRows.filter(t=>t.source!=='salary').reduce((sum,t)=>sum+t.amount,0);
-  const startingBudget=budget.overall,available=startingBudget+extraIncome;
+  const startingBudget=budget.overall,available=startingBudget+extraIncome,emergencyFunds=budget.emergencyFunds,spendable=available-emergencyFunds,remaining=spendable-spent;
   const startUTC=Date.parse(range.start+'T00:00:00Z'),todayUTC=Date.parse(today+'T00:00:00Z');
   const elapsed=today<range.start?0:today>=range.end?range.days:Math.floor((todayUTC-startUTC)/86400000)+1;
   const daysLeft=range.days-elapsed;
-  return {rows,incomeRows,extraIncome,startingBudget,available,categories,spent,budget,remaining:available-spent,percent:available?spent/available*100:0,elapsed,daysLeft,average:elapsed?spent/elapsed:0,recommended:daysLeft?Math.max(0,available-spent)/daysLeft:0,range,summary};
+  return {rows,incomeRows,extraIncome,startingBudget,available,emergencyFunds,spendable,categories,spent,budget,remaining,percent:spendable>0?spent/spendable*100:0,elapsed,daysLeft,average:elapsed?spent/elapsed:0,recommended:daysLeft?Math.max(0,remaining)/daysLeft:0,range,summary};
 }
 export function budgetState(spent,budget) { if(budget===undefined||budget===null)return 'none';if(budget===0)return spent>0?'over':'normal'; const ratio=spent/budget;return ratio>1?'over':ratio>=.9?'warning':ratio>=.7?'caution':'normal'; }
 export function validateExpense(t,state) {
@@ -72,7 +72,7 @@ export function validateState(raw) {
   if(!Array.isArray(s.transactions)||s.transactions.length>100000)throw new Error('Backup transactions are invalid.');
   const tids=new Set();s.transactions.forEach(t=>{validateExpense(t,s);if(tids.has(t.id))throw new Error('Backup has duplicate transaction IDs.');tids.add(t.id);});
   if(!s.budgets||typeof s.budgets!=='object'||Array.isArray(s.budgets))throw new Error('Backup budgets are missing.');
-  Object.entries(s.budgets).forEach(([m,b])=>{if(!validMonth(m)||!b||!money(b.overall)||!b.categories||typeof b.categories!=='object'||Array.isArray(b.categories))throw new Error('Backup budgets are invalid.');Object.entries(b.categories).forEach(([key,n])=>{if(!ids.has(key)||!money(n))throw new Error('Backup category budgets are invalid.');});});
+  Object.entries(s.budgets).forEach(([m,b])=>{if(!validMonth(m)||!b||!money(b.overall)||!b.categories||typeof b.categories!=='object'||Array.isArray(b.categories))throw new Error('Backup budgets are invalid.');if(b.emergencyFunds!==undefined&&!money(b.emergencyFunds))throw new Error('Emergency funds must be a nonnegative amount, up to Rp1.000.000.000.000.');Object.entries(b.categories).forEach(([key,n])=>{if(!ids.has(key)||!money(n))throw new Error('Backup category budgets are invalid.');});});
   if(!s.summaries||typeof s.summaries!=='object'||Array.isArray(s.summaries))throw new Error('Backup summaries are invalid.');
   Object.entries(s.summaries).forEach(([m,b])=>{if(!validMonth(m)||!b||!money(b.total)||!b.categories||typeof b.categories!=='object'||Array.isArray(b.categories))throw new Error('Backup summary is invalid.');let total=0;Object.entries(b.categories).forEach(([key,n])=>{if(!ids.has(key)||!money(n))throw new Error('Backup summary category is invalid.');total+=n;});if(total!==b.total)throw new Error('Summary categories must add up to the summary total.');});
   if(!Array.isArray(s.quickExpenses)||s.quickExpenses.length>100)throw new Error('Backup quick expenses are invalid.');
