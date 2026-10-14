@@ -10,6 +10,7 @@ import {installPullRefresh} from './pull-refresh.mjs';
 import {CloudController} from './cloud-ui.mjs';
 import {indexHistory,historyPage} from './history.mjs';
 import {rememberFocus,restoreFocus} from './focus.mjs';
+import {spendingOverview} from './spending-overview.mjs';
 const localRepo=new ExpenseRepository();
 let repo=localRepo,cloud,income,legacyIncome=null;
 let state,month=expenseMonth(localDate()),page=['home','transactions','reports','settings'].includes(location.hash.slice(1))?location.hash.slice(1):'home';
@@ -94,11 +95,11 @@ function reports(){
  const m=metrics(state,month),status=budgetState(m.spent,Math.max(0,m.spendable));
  const ranked=state.categories.filter(c=>(m.categories[c.id]||0)>0).sort((a,b)=>m.categories[b.id]-m.categories[a.id]);
  const large=m.rows.slice().sort((a,b)=>b.amount-a.amount).slice(0,3);
- const headline=m.remaining<0?'Over budget':status==='warning'?'Budget nearly used':status==='caution'?'Slow down a little':m.spent?'On track':'No spending yet';
- const warnings=state.categories.filter(c=>m.budget.categories[c.id]!==undefined&&['warning','over','caution'].includes(budgetState(m.categories[c.id]||0,m.budget.categories[c.id])));
+ const overview=spendingOverview(state,m,{format});
+ const headline=m.remaining<0?'Over budget':status==='warning'?'Budget nearly used':status==='caution'?'Slow down a little':m.spent?(overview.tone==='caution'?'Keep an eye on spending':'Within budget'):'No spending yet';
  const segments=ranked.map(c=>'<span style="flex:'+m.categories[c.id]+';background:'+themeColor(c.id)+'"></span>').join('');
  return '<section class="report-overview" aria-labelledby="report-total-title"><div class="report-status '+status+'">'+headline+'</div><h2 id="report-total-title">Total spending</h2><p class="report-total">'+displayMoney(m.spent)+'</p><div class="report-budget"><span>Available to spend</span><strong>'+format(m.spendable)+'</strong></div>'+progress(m.spent,Math.max(0,m.spendable))+'<div class="report-budget-foot"><span>'+(m.spendable>0?m.percent.toFixed(1)+'% used':'No money available')+'</span><strong class="'+(m.remaining<0?'negative':'')+'">'+format(Math.abs(m.remaining))+(m.remaining<0?' over':' left')+'</strong></div></section>'+
- (warnings.length?'<section class="control-notice"><h2>Watch these</h2>'+warnings.map(c=>'<p><strong>'+e(c.name)+'</strong> '+((m.categories[c.id]||0)>m.budget.categories[c.id]?'is '+format((m.categories[c.id]||0)-m.budget.categories[c.id])+' over budget.':'has '+format(m.budget.categories[c.id]-(m.categories[c.id]||0))+' left.')+'</p>').join('')+'</section>':'')+
+ '<section class="control-notice '+overview.tone+'" aria-labelledby="spending-overview-title"><h2 id="spending-overview-title">Spending overview</h2><p>'+e(overview.text)+'</p></section>'+
  '<section class="category-report"><div class="section-head"><h2>Where it went</h2><span class="muted">'+ranked.length+' categories</span></div>'+(ranked.length?'<div class="spending-strip" aria-hidden="true">'+segments+'</div><p class="biggest-category"><strong>'+e(ranked[0].name)+'</strong> leads at '+Math.round(m.categories[ranked[0].id]/m.spent*100)+'% of spending.</p><div class="category-breakdown">'+ranked.map(c=>{const amount=m.categories[c.id],pct=amount/m.spent*100,limit=m.budget.categories[c.id];return '<div class="category-report-row">'+categoryIcon(c.id)+'<div class="category-report-info"><div class="distribution-label"><span>'+e(c.name)+'</span><strong>'+format(amount)+'</strong></div><div class="category-share"><div class="share-track" aria-hidden="true"><span style="width:'+pct+'%;background:'+themeColor(c.id)+'"></span></div><small>'+pct.toFixed(1)+'%</small></div>'+(limit!==undefined?'<small class="category-limit '+(amount>limit?'negative':'')+'">'+format(Math.abs(limit-amount))+(amount>limit?' over budget':' remaining of '+format(limit))+'</small>':'')+'</div></div>';}).join('')+'</div>':'<div class="empty"><h3>No spending to analyze yet</h3><p>Add your first expense using the + button below.</p></div>')+'</section>'+
  (m.summary?'<p class="simple-summary-note">'+monthName()+' includes your monthly summary of '+format(m.summary.total)+'. Individual expenses were not supplied.</p>':'')+
  (large.length?'<details class="card simple-more"><summary>Biggest expenses</summary>'+large.map(t=>transactionRow(t,true)).join('')+'</details>':'');
