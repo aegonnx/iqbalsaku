@@ -2,7 +2,6 @@
   "name": "iqbal-saku",
   "version": "1.0.0",
   "private": true,
-  "type": "module",
   "description": "A mobile income and expense tracker with offline storage and account sync",
   "scripts": {
     "start": "node server.cjs",
