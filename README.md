@@ -87,6 +87,8 @@ Editing dialogs keep Save and Delete in a footer outside the scrolling fields. S
 
 ## Motion and mobile interaction
 
+For several expenses on the same date, use **Save + next** in Add expense. Each tap saves one transaction and clears amount, description and note in place, preserving date and category. **Save expense** saves the final item and closes the editor. The compact footer keeps the same height; edit/delete controls remain unchanged. `tests/multi-expense-browser.cjs` covers repeat entry, totals, persistence, validation and duplicate-tap protection with simulated keyboards in both themes.
+
 Dialogs use one native autofocus step during the user's tap, with 240 ms entry and 180 ms exit animations. Exit completion controls dismissal instead of an arbitrary timeout. Keyboard geometry writes are coalesced once per animation frame and unchanged values are skipped. Save and Delete remain outside the scrolling fields; a second open or submit cannot replace a draft or duplicate a save.
 
 Edit opens without activating the keyboard. Expense entry uses Amount | Date and Category | Description above the keyboard, with aligned controls and consistent row spacing. Income retains a full-width amount followed by source and description. Add automatically focuses the thousands amount input. The header's Details button exposes notes and recent expense suggestions (and the date for income) in a separate scrolling area; Entry returns to the main fields. Save stays in the fixed dialog footer. Dialogs have accessible names, navigation focuses the page heading, and replacement renders restore relevant same-page focus. Page titles and month controls are inside the main landmark.

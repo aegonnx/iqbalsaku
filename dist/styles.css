@@ -232,6 +232,8 @@ dialog .expense-form,dialog .confirm-form{min-height:0;overflow-y:auto;overscrol
 #expense-dialog .amount-preview{font-size:.75rem;line-height:18px;margin-top:6px;overflow-wrap:anywhere}
 #expense-dialog .dialog-header{margin-bottom:16px}
 #expense-dialog .dialog-inner>.form-actions{margin-top:12px;padding-top:12px}
+#expense-dialog .form-actions:has(.save-another){display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+#expense-dialog .form-actions:has(.save-another) button{min-width:0;padding-inline:10px;font-size:.875rem;white-space:nowrap}
 .expense-options{min-height:0;overflow-y:auto;overscroll-behavior:contain;scroll-padding-block:8px}
 .history-pagination{display:grid;gap:12px;text-align:center;font-size:.875rem}
 .dialog-header-actions{display:flex;align-items:center;gap:4px;flex-shrink:0}

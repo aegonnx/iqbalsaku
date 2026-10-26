@@ -23,6 +23,7 @@ Success means reliable saving, correct balances after every change, fast entry w
 - The main navigation is Read, Add, and Analyze. Settings are reached through the top settings button.
 - Read prioritizes remaining monthly budget, followed by starting budget, extra income, total spending, emergency funds, and a combined Money in & out history grouped by date. Category budgets stay in Settings and Analyze.
 - Add is the central bottom-navigation action. Edit opens without activating the keyboard; tapping a field starts editing, and Delete is immediately available.
+- Add expense offers Save + next for consecutive entries. Save each transaction immediately, keep its date and category for the next entry, and clear amount, description and note without rebuilding or reopening the popup. Normal Save ends the sequence; edit/delete controls stay unchanged.
 - Analyze provides monthly totals, category breakdowns, budget comparisons, and spending guidance. Month navigation uses short title-case labels such as Sep and Oct.
 - Optional Supabase sign-in keeps account expenses and income available across devices. Signed-out device records and signed-in account records remain separate. Moving device records into an account requires importing a backup after signing in.
 
