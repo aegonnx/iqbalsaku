@@ -75,9 +75,20 @@ function transactionRow(t,showDate=false){
  return '<div class="transaction">'+categoryIcon(t.categoryId)+'<div class="transaction-info"><div class="transaction-title">'+e(t.description)+'</div><div class="transaction-meta">'+e(cat(t.categoryId)?.name)+(showDate?' · '+shortDate(t.date):'')+(t.note?' · '+e(t.note):'')+'</div></div><div class="transaction-amount money-out" aria-label="'+e('Expense '+format(t.amount))+'">−'+format(t.amount)+'</div><button class="transaction-edit" data-action="edit" data-id="'+e(t.id)+'" aria-label="Edit '+e(t.description)+'">'+icon('edit')+'</button></div>';
 }
 function themeColor(key){return 'var(--category-'+categoryTone(key)+')';}
+function categoryExpensesContent(m,key,limit=Infinity){
+ const rows=m.rows.filter(t=>t.categoryId===key).sort((a,b)=>b.amount-a.amount||b.date.localeCompare(a.date)||a.id.localeCompare(b.id));
+ const summary=m.summary?.categories[key]||0;
+ return (summary?'<p class="category-summary-note">Monthly summary: '+format(summary)+'. No individual expense records were supplied for this amount.</p>':'')+(rows.length?'<p class="category-expense-order muted">Highest to lowest amount</p>'+rows.slice(0,limit).map(t=>transactionRow(t,true)).join('')+(rows.length>limit?'<button type="button" class="text-button full-width" data-action="more-chart-expenses" data-id="'+e(key)+'" data-limit="'+(limit+5)+'">Show more expenses ('+limit+' of '+rows.length+')</button>':''):'<p class="muted">No individual expenses recorded in this category for the selected period.</p>');
+}
+function showChartExpenses(key,limit=5,{animate=true}={}){
+ const panel=document.getElementById('chart-expenses');if(!panel)return;
+ panel.getAnimations().forEach(a=>a.cancel());panel.hidden=false;panel.dataset.category=key;
+ panel.querySelector('.chart-expenses-list').innerHTML=categoryExpensesContent(metrics(state,month),key,limit);
+ if(animate&&!matchMedia('(prefers-reduced-motion: reduce)').matches){panel.animate([{opacity:0,transform:'translateY(16px)'},{opacity:1,transform:'translateY(0)'}],{duration:450,easing:'cubic-bezier(.22,0,.2,1)'});}
+}
 function categoryChart(m,ranked){
  const highest=m.categories[ranked[0].id];
- return '<div class="category-chart" role="group" aria-label="Spending by category. Select a bar for details."><div class="category-chart-bars">'+ranked.map((c,i)=>{const amount=m.categories[c.id],pct=amount/m.spent*100;return '<button type="button" class="category-bar" data-action="select-chart-category" data-id="'+e(c.id)+'" aria-pressed="'+(i===0)+'" aria-label="'+e(c.name+', '+format(amount)+', '+pct.toFixed(1)+'% of spending')+'" style="--bar-color:'+themeColor(c.id)+';--bar-height:'+(amount/highest*100)+'%"><span class="category-bar-plot" aria-hidden="true"><span class="category-bar-fill"></span></span><span class="category-bar-label" aria-hidden="true">'+e(c.name)+'</span></button>';}).join('')+'</div></div><div class="chart-selection" role="status" aria-live="polite" aria-atomic="true"><span class="chart-selection-name">'+e(ranked[0].name)+'</span><strong class="chart-selection-amount">'+format(highest)+'</strong><span class="chart-selection-share">'+(highest/m.spent*100).toFixed(1)+'% of spending</span></div>';
+ return '<div class="category-chart" role="group" aria-label="Spending by category. Select a bar for details."><div class="category-chart-bars">'+ranked.map((c,i)=>{const amount=m.categories[c.id],pct=amount/m.spent*100;return '<button type="button" class="category-bar" aria-controls="chart-expenses" aria-expanded="false" data-action="select-chart-category" data-id="'+e(c.id)+'" aria-pressed="'+(i===0)+'" aria-label="'+e(c.name+', '+format(amount)+', '+pct.toFixed(1)+'% of spending')+'" style="--bar-color:'+themeColor(c.id)+';--bar-height:'+(amount/highest*100)+'%"><span class="category-bar-plot" aria-hidden="true"><span class="category-bar-fill"></span></span><span class="category-bar-label" aria-hidden="true">'+e(c.name)+'</span></button>';}).join('')+'</div></div><div class="chart-selection" role="status" aria-live="polite" aria-atomic="true"><span class="chart-selection-name">'+e(ranked[0].name)+'</span><strong class="chart-selection-amount">'+format(highest)+'</strong><span class="chart-selection-share">'+(highest/m.spent*100).toFixed(1)+'% of spending</span></div><section id="chart-expenses" class="chart-expenses" hidden aria-labelledby="chart-expenses-title"><div class="section-head"><h3 id="chart-expenses-title">Expenses</h3><button type="button" class="text-button" data-action="hide-chart-expenses">Hide list</button></div><div class="chart-expenses-list"></div></section>';
 }
 function categoryReport(c,m,count){
  const amount=m.categories[c.id],pct=amount/m.spent*100,limit=m.budget.categories[c.id];
@@ -170,15 +181,20 @@ async function doAction(button){
  switch(button.dataset.action){
  case 'theme':toggleTheme(button);break;
  case 'select-chart-category':{
-  const c=cat(key);if(!c||button.getAttribute('aria-pressed')==='true')break;
+  const c=cat(key);if(!c)break;
+  if(button.getAttribute('aria-expanded')==='true')break;
   const m=metrics(state,month),amount=m.categories[key]||0,selection=app.querySelector('.chart-selection');if(!selection||!m.spent)break;
-  app.querySelectorAll('.category-bar').forEach(bar=>bar.setAttribute('aria-pressed',String(bar===button)));
+  app.querySelectorAll('.category-bar').forEach(bar=>{bar.setAttribute('aria-pressed',String(bar===button));bar.setAttribute('aria-expanded',String(bar===button));});
+  app.querySelectorAll('.category-expenses[open]').forEach(details=>details.open=false);
   selection.querySelector('.chart-selection-name').textContent=c.name;
   selection.querySelector('.chart-selection-amount').textContent=format(amount);
   selection.querySelector('.chart-selection-share').textContent=(amount/m.spent*100).toFixed(1)+'% of spending';
-  if(!matchMedia('(prefers-reduced-motion: reduce)').matches){selection.getAnimations().forEach(a=>a.cancel());selection.animate([{opacity:.4,transform:'translateY(4px)'},{opacity:1,transform:'translateY(0)'}],{duration:200,easing:'cubic-bezier(.22,1,.36,1)'});}
+  showChartExpenses(key);
+  if(!matchMedia('(prefers-reduced-motion: reduce)').matches){selection.getAnimations().forEach(a=>a.cancel());selection.animate([{opacity:.5,transform:'translateY(4px)'},{opacity:1,transform:'translateY(0)'}],{duration:450,easing:'cubic-bezier(.22,0,.2,1)'});}
   break;
  }
+ case 'more-chart-expenses':{showChartExpenses(key,Number(button.dataset.limit),{animate:false});const more=app.querySelector('[data-action=more-chart-expenses]');if(more)more.focus({preventScroll:true});else{const title=document.getElementById('chart-expenses-title');title.tabIndex=-1;title.focus({preventScroll:true});}break;}
+ case 'hide-chart-expenses':{const panel=document.getElementById('chart-expenses'),bar=app.querySelector('.category-bar[aria-expanded=true]');panel.getAnimations().forEach(a=>a.cancel());panel.hidden=true;panel.querySelector('.chart-expenses-list').replaceChildren();bar?.setAttribute('aria-expanded','false');bar?.focus({preventScroll:true});break;}
  case 'toggle-overview':{const expanded=button.getAttribute('aria-expanded')!=='true';document.getElementById('spending-overview-copy')?.classList.toggle('overview-collapsed',!expanded);button.setAttribute('aria-expanded',String(expanded));button.textContent=expanded?'Read less':'Read more';break;}
  case 'more-history':{historyLimit+=60;document.getElementById('history-list').innerHTML=historyBody();const more=app.querySelector('[data-action=more-history]');if(more)more.focus({preventScroll:true});else{const status=app.querySelector('.history-pagination p');status?.setAttribute('tabindex','-1');status?.focus({preventScroll:true});}break;}
  case 'page':navigate(button.dataset.page);break;
@@ -207,11 +223,10 @@ function confirmIncomeImport(saved){
 }
 app.addEventListener('click',async ev=>{const button=ev.target.closest('[data-action]');if(!button)return;try{await doAction(button);}catch(err){notify(errorMessage(err));}});
 app.addEventListener('toggle',ev=>{
- const details=ev.target;if(!details.matches?.('.category-expenses')||!details.open||details.dataset.loaded)return;
- const m=metrics(state,month),key=details.dataset.category;
- const rows=m.rows.filter(t=>t.categoryId===key).sort((a,b)=>b.amount-a.amount||b.date.localeCompare(a.date)||a.id.localeCompare(b.id));
- const summary=m.summary?.categories[key]||0;
- details.querySelector('.category-expenses-list').innerHTML=(summary?'<p class="category-summary-note">Monthly summary: '+format(summary)+'. No individual expense records were supplied for this amount.</p>':'')+(rows.length?'<p class="category-expense-order muted">Highest to lowest amount</p>'+rows.map(t=>transactionRow(t,true)).join(''):'<p class="muted">No individual expenses recorded in this category for the selected period.</p>');
+ const details=ev.target;if(!details.matches?.('.category-expenses')||!details.open)return;
+ const panel=document.getElementById('chart-expenses');if(panel&&!panel.hidden){panel.getAnimations().forEach(a=>a.cancel());panel.hidden=true;panel.querySelector('.chart-expenses-list').replaceChildren();app.querySelector('.category-bar[aria-expanded=true]')?.setAttribute('aria-expanded','false');}
+ if(details.dataset.loaded)return;
+ details.querySelector('.category-expenses-list').innerHTML=categoryExpensesContent(metrics(state,month),details.dataset.category);
  details.dataset.loaded='true';
 },true);
 app.addEventListener('input',ev=>{if(ev.target.id==='transaction-search'){search=ev.target.value;historyLimit=60;document.getElementById('history-list').innerHTML=historyBody();}});

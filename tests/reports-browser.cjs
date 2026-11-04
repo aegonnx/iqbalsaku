@@ -36,6 +36,7 @@ const fs=require('node:fs'),path=require('node:path'),assert=require('node:asser
   if(theme==='dark'){fs.mkdirSync('tmp',{recursive:true});await page.locator('.control-notice').screenshot({path:'tmp/spending-overview-preview.png'});}
   assert.equal(await page.locator('.category-bar-fill').count(),3);
   const bar=page.locator('.category-bar[data-id=snack]');await bar.tap();assert.equal(await bar.getAttribute('aria-pressed'),'true');
+  await page.locator('#chart-expenses .transaction').waitFor();assert.deepEqual(await page.locator('#chart-expenses .transaction-title').allTextContents(),['Snack']);assert.equal(await bar.getAttribute('aria-expanded'),'true');
   assert.equal(await page.locator('.chart-selection-name').textContent(),'Snack');assert.equal(await page.locator('.chart-selection-amount').textContent(),'Rp20.000');assert.equal(await page.locator('.chart-selection-share').textContent(),'33.3% of spending');
   await page.locator('.category-bar[data-id=makan]').focus();await page.keyboard.press('Enter');assert.equal(await page.locator('.chart-selection-name').textContent(),'Makan');assert.equal(await page.locator('.category-bar[aria-pressed=true]').count(),1);
   const barHeights=await page.locator('.category-bar-fill').evaluateAll(nodes=>nodes.map(n=>n.getBoundingClientRect().height));assert.ok(Math.abs(barHeights[0]/barHeights[1]-1.5)<.05);
@@ -76,6 +77,13 @@ const fs=require('node:fs'),path=require('node:path'),assert=require('node:asser
   assert.equal(await page.locator('.control-notice img').count(),0);assert.match(await page.locator('.control-notice p').textContent(),/<img src=x onerror=alert\(1\)>/);
   assert.deepEqual(await page.locator('.category-report-item .category-report-row .distribution-label strong').allTextContents(),['Rp145.000','Rp20.000','Rp10.000']);
   assert.equal(await page.locator('.category-expenses[open]').count(),0);
+  // Tapping the leading bar also opens details; switching bars replaces one bounded list.
+  const chartDating=page.locator('.category-bar[data-id=dating]');await chartDating.tap();await page.locator('#chart-expenses .transaction').first().waitFor();
+  assert.deepEqual(await page.locator('#chart-expenses .transaction-title').allTextContents(),['Trip <img src=x onerror=alert(1)>','Equal A','Equal B','Dinner','Coffee']);
+  assert.equal(await page.locator('#chart-expenses img, #chart-expenses svg[onload]').count(),0);
+  await page.locator('#chart-expenses .transaction-edit[data-id=detail-large]').tap();await page.locator('#expense-dialog[open]').waitFor();assert.equal(await page.locator('#expense-amount').inputValue(),'50');await page.locator('#expense-dialog [data-close]').tap();await page.waitForFunction(()=>!document.getElementById('expense-dialog').open);
+  await page.locator('.category-bar[data-id=snack]').tap();await page.locator('#chart-expenses .transaction').waitFor();assert.deepEqual(await page.locator('#chart-expenses .transaction-title').allTextContents(),['Snack']);assert.equal(await page.locator('.category-bar[aria-expanded=true]').count(),1);
+  await page.locator('[data-action=hide-chart-expenses]').tap();assert.equal(await page.locator('#chart-expenses').isVisible(),false);assert.equal(await page.evaluate(()=>document.activeElement.dataset.id),'snack');
   const dating=page.locator('.category-expenses[data-category=dating]'),datingList=dating.locator('.category-expenses-list');
   assert.match(await dating.locator('summary').textContent(),/View 5 expenses/);assert.equal(await datingList.locator('.transaction').count(),0);
   await dating.locator('summary').tap();await datingList.locator('.transaction').first().waitFor();
@@ -95,6 +103,7 @@ const fs=require('node:fs'),path=require('node:path'),assert=require('node:asser
   await page.locator('#selected-month').fill('2026-09');await page.locator('#selected-month').dispatchEvent('change');
   assert.equal(await page.locator('.report-total').textContent(),'Rp135.000');assert.equal(await page.locator('.category-expenses[data-category=dating]').count(),0);
   const mixedSummary=page.locator('.category-expenses[data-category=makan]');
+  await page.locator('.category-bar[data-id=makan]').tap();assert.match(await page.locator('#chart-expenses .category-summary-note').textContent(),/Rp125\.000/);assert.deepEqual(await page.locator('#chart-expenses .transaction-title').allTextContents(),['September meal']);
   assert.equal(await mixedSummary.evaluate(node=>node.open),false);assert.match(await mixedSummary.locator('summary').textContent(),/View 1 expense/);
   await mixedSummary.locator('summary').tap();await mixedSummary.locator('.transaction').waitFor();
   assert.deepEqual(await mixedSummary.locator('.transaction-title').allTextContents(),['September meal']);assert.match(await mixedSummary.locator('.transaction-meta').textContent(),/20 Sep/);
@@ -115,6 +124,12 @@ const fs=require('node:fs'),path=require('node:path'),assert=require('node:asser
   }
   await page.emulateMedia({reducedMotion:'reduce'});await page.reload();await page.locator('#selected-month').fill('2026-10');await page.locator('#selected-month').dispatchEvent('change');
   assert.equal(await page.locator('.category-bar-fill').first().evaluate(n=>getComputedStyle(n).animationName),'none');await page.locator('.category-bar').last().tap();assert.equal(await page.locator('.chart-selection').evaluate(n=>n.getAnimations().length),0);
+  assert.equal(await page.locator('#chart-expenses').evaluate(n=>n.getAnimations().length),0);
+  const activeCategory=await page.locator('.category-bar').last().getAttribute('data-id');
+  await page.evaluate(async key=>{const {ExpenseRepository}=await import('./storage.mjs'),repo=new ExpenseRepository(),s=await repo.load();for(let i=0;i<11;i++)s.transactions.push({id:'page-'+i,description:'Paged '+i,categoryId:key,amount:10+i,date:'2026-10-10',note:'',createdAt:'2026-10-10T00:00:00Z'});await repo.save(s);},activeCategory);
+  await page.reload();await page.locator('#selected-month').fill('2026-10');await page.locator('#selected-month').dispatchEvent('change');await page.locator('.category-bar[data-id="'+activeCategory+'"]').tap();
+  assert.equal(await page.locator('#chart-expenses .transaction').count(),5);await page.locator('[data-action=more-chart-expenses]').tap();assert.equal(await page.locator('#chart-expenses .transaction').count(),10);await page.locator('[data-action=more-chart-expenses]').tap();assert.equal(await page.locator('#chart-expenses .transaction').count(),12);assert.equal(await page.locator('[data-action=more-chart-expenses]').count(),0);
+  assert.deepEqual((await page.locator('#chart-expenses .transaction-title').allTextContents()).slice(0,11),['Paged 10','Paged 9','Paged 8','Paged 7','Paged 6','Paged 5','Paged 4','Paged 3','Paged 2','Paged 1','Paged 0']);
   await context.close();console.log('PASS '+theme+': report totals, collapsed category expenses, descending amounts and tie order, dates, editing, keyboard expansion, escaped text, summary-only and mixed months, mobile layout');
  }}finally{await browser.close();}
 })().catch(err=>{console.error(err);process.exitCode=1;});

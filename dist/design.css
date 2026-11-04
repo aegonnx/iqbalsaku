@@ -133,8 +133,16 @@ h2 {font-size:1.125rem;letter-spacing:-.025em;font-weight:600}
 .chart-selection-name {font-size:.875rem;font-weight:500;overflow-wrap:anywhere}
 .chart-selection-amount {font-size:.875rem;font-weight:600;font-variant-numeric:tabular-nums;overflow-wrap:anywhere;text-align:right;min-width:0}
 .chart-selection-share {grid-column:1/-1;font-size:.75rem;color:var(--muted)}
-@media(prefers-reduced-motion:no-preference){.category-bar-fill {animation:category-bar-enter 240ms cubic-bezier(.22,1,.36,1) both}}
-@keyframes category-bar-enter {from{transform:scaleY(.05);opacity:.5}to{transform:scaleY(1);opacity:1}}
+@media(prefers-reduced-motion:no-preference){.category-bar-fill {animation:category-bar-enter 650ms cubic-bezier(.22,0,.2,1) both}}
+@keyframes category-bar-enter {0%{transform:scaleY(.02);opacity:.3}60%{opacity:1}100%{transform:scaleY(1);opacity:1}}
+.chart-expenses {margin-top:12px;padding:0 0 16px;border-bottom:1px solid var(--line)}
+.chart-expenses[hidden] {display:none}
+.chart-expenses>.section-head {margin:0 0 4px;gap:12px}
+.chart-expenses h3 {font-size:.9375rem;font-weight:500}
+.chart-expenses-list {min-width:0}
+.chart-expenses .transaction {background:var(--expense-surface);border:0;border-radius:12px;padding:12px 10px;margin-top:8px}
+.chart-expenses .transaction-meta {font-size:.75rem}
+.chart-expenses .category-expense-order {margin:0 0 12px}
 .biggest-category {margin:12px 0 20px;font-size:.8125rem;line-height:1.5}
 .biggest-category strong {font-weight:500}
 .category-breakdown {display:grid;gap:24px}
