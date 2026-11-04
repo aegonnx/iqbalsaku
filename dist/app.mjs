@@ -90,10 +90,6 @@ function categoryChart(m,ranked){
  const highest=m.categories[ranked[0].id];
  return '<div class="category-chart" role="group" aria-label="Spending by category. Select a bar for details."><div class="category-chart-bars">'+ranked.map((c,i)=>{const amount=m.categories[c.id],pct=amount/m.spent*100;return '<button type="button" class="category-bar" aria-controls="chart-expenses" aria-expanded="false" data-action="select-chart-category" data-id="'+e(c.id)+'" aria-pressed="'+(i===0)+'" aria-label="'+e(c.name+', '+format(amount)+', '+pct.toFixed(1)+'% of spending')+'" style="--bar-color:'+themeColor(c.id)+';--bar-height:'+(amount/highest*100)+'%"><span class="category-bar-plot" aria-hidden="true"><span class="category-bar-fill"></span></span><span class="category-bar-label" aria-hidden="true">'+e(c.name)+'</span></button>';}).join('')+'</div></div><div class="chart-selection" role="status" aria-live="polite" aria-atomic="true"><span class="chart-selection-name">'+e(ranked[0].name)+'</span><strong class="chart-selection-amount">'+format(highest)+'</strong><span class="chart-selection-share">'+(highest/m.spent*100).toFixed(1)+'% of spending</span></div><section id="chart-expenses" class="chart-expenses" hidden aria-labelledby="chart-expenses-title"><div class="section-head"><h3 id="chart-expenses-title">Expenses</h3><button type="button" class="text-button" data-action="hide-chart-expenses">Hide list</button></div><div class="chart-expenses-list"></div></section>';
 }
-function categoryReport(c,m,count){
- const amount=m.categories[c.id],pct=amount/m.spent*100,limit=m.budget.categories[c.id];
- return '<div class="category-report-item"><div class="category-report-row">'+categoryIcon(c.id)+'<div class="category-report-info"><div class="distribution-label"><span>'+e(c.name)+'</span><strong>'+format(amount)+'</strong></div><div class="category-share"><div class="share-track" aria-hidden="true"><span style="width:'+pct+'%;background:'+themeColor(c.id)+'"></span></div><small>'+pct.toFixed(1)+'%</small></div>'+(limit!==undefined?'<small class="category-limit '+(amount>limit?'negative':'')+'">'+format(Math.abs(limit-amount))+(amount>limit?' over budget':' remaining of '+format(limit))+'</small>':'')+'</div></div><details class="category-expenses" data-category="'+e(c.id)+'"><summary>'+(count?'View '+count+' '+(count===1?'expense':'expenses'):'View details')+'<span class="sr-only"> in '+e(c.name)+'</span></summary><div class="category-expenses-list"></div></details></div>';
-}
 function distribution(m,all=false){
  const ordered=state.categories.slice().sort((a,b)=>(m.categories[b.id]||0)-(m.categories[a.id]||0));
  return ordered.filter(c=>(m.categories[c.id]||0)>0).map(c=>{const amount=m.categories[c.id]||0;const pct=m.spent?amount/m.spent*100:0;return '<div class="distribution-row"><div class="distribution-label"><span><i class="legend-dot" style="background:'+themeColor(c.id)+'"></i>'+e(c.name)+'</span><strong>'+format(amount)+'</strong></div><div class="progress"><span style="width:'+pct+'%;background:'+themeColor(c.id)+'"></span></div>'+(all?'<small>'+pct.toFixed(1)+'% of spending</small>':'')+'</div>';}).join('')||'<div class="empty">No spending yet this month.</div>';
@@ -112,14 +108,13 @@ function transactions(){
 }
 function reports(){
  const m=metrics(state,month),status=budgetState(m.spent,Math.max(0,m.spendable));
- const expenseCounts={};for(const row of m.rows)expenseCounts[row.categoryId]=(expenseCounts[row.categoryId]||0)+1;
  const ranked=state.categories.filter(c=>(m.categories[c.id]||0)>0).sort((a,b)=>m.categories[b.id]-m.categories[a.id]);
  const large=m.rows.slice().sort((a,b)=>b.amount-a.amount).slice(0,3);
  const overview=spendingOverview(state,m,{format});
  const overviewCard='<section class="control-notice '+overview.tone+'" aria-labelledby="spending-overview-title"><h2 id="spending-overview-title">Spending overview</h2><p id="spending-overview-copy" class="overview-collapsed">'+e(overview.text)+'</p><button type="button" class="text-button overview-toggle" data-action="toggle-overview" aria-expanded="false" aria-controls="spending-overview-copy">Read more</button></section>';
  const headline=m.remaining<0?'Over budget':status==='warning'?'Budget nearly used':status==='caution'?'Slow down a little':m.spent?(overview.tone==='caution'?'Keep an eye on spending':'Within budget'):'No spending yet';
  return '<section class="report-overview" aria-labelledby="report-total-title"><div class="report-status '+status+'">'+headline+'</div><h2 id="report-total-title">Total spending</h2><p class="report-total">'+displayMoney(m.spent)+'</p><div class="report-budget"><span>Available to spend</span><strong>'+format(m.spendable)+'</strong></div>'+progress(m.spent,Math.max(0,m.spendable))+'<div class="report-budget-foot"><span>'+(m.spendable>0?m.percent.toFixed(1)+'% used':'No money available')+'</span><strong class="'+(m.remaining<0?'negative':'')+'">'+format(Math.abs(m.remaining))+(m.remaining<0?' over':' left')+'</strong></div></section>'+
- '<section class="category-report"><div class="section-head"><h2>Where it went</h2><span class="muted">'+ranked.length+' categories</span></div>'+(ranked.length?categoryChart(m,ranked)+'<p class="biggest-category"><strong>'+e(ranked[0].name)+'</strong> leads at '+Math.round(m.categories[ranked[0].id]/m.spent*100)+'% of spending.</p>'+overviewCard+'<div class="category-breakdown">'+ranked.map(c=>categoryReport(c,m,expenseCounts[c.id]||0)).join('')+'</div>':'<div class="empty"><h3>No spending to analyze yet</h3><p>Add your first expense using the + button below.</p></div>'+overviewCard)+'</section>'+
+ '<section class="category-report"><div class="section-head"><h2>Where it went</h2><span class="muted">'+ranked.length+' categories</span></div>'+(ranked.length?categoryChart(m,ranked)+'<p class="biggest-category"><strong>'+e(ranked[0].name)+'</strong> leads at '+Math.round(m.categories[ranked[0].id]/m.spent*100)+'% of spending.</p>'+overviewCard:'<div class="empty"><h3>No spending to analyze yet</h3><p>Add your first expense using the + button below.</p></div>'+overviewCard)+'</section>'+
  (m.summary?'<p class="simple-summary-note">'+monthName()+' includes a saved monthly summary of '+format(m.summary.total)+' in addition to any listed expenses. Summary amounts have no individual expense records.</p>':'')+
  (large.length?'<details class="card simple-more"><summary>Biggest expenses</summary>'+large.map(t=>transactionRow(t,true)).join('')+'</details>':'');
 }
@@ -185,7 +180,6 @@ async function doAction(button){
   if(button.getAttribute('aria-expanded')==='true')break;
   const m=metrics(state,month),amount=m.categories[key]||0,selection=app.querySelector('.chart-selection');if(!selection||!m.spent)break;
   app.querySelectorAll('.category-bar').forEach(bar=>{bar.setAttribute('aria-pressed',String(bar===button));bar.setAttribute('aria-expanded',String(bar===button));});
-  app.querySelectorAll('.category-expenses[open]').forEach(details=>details.open=false);
   selection.querySelector('.chart-selection-name').textContent=c.name;
   selection.querySelector('.chart-selection-amount').textContent=format(amount);
   selection.querySelector('.chart-selection-share').textContent=(amount/m.spent*100).toFixed(1)+'% of spending';
@@ -222,13 +216,6 @@ function confirmIncomeImport(saved){
  showConfirm('Import saved income?', 'Add '+preview.added+' saved records to '+(cloud.user?'this account':'this tracker')+'? Expenses and existing budgets stay in place. Saved salary is counted only as the starting budget, never as extra income.','',async()=>{await commit(next=>{const result=consolidateIncome(next,saved);Object.assign(next,result.state);});notify('Saved income imported');},'Import income');
 }
 app.addEventListener('click',async ev=>{const button=ev.target.closest('[data-action]');if(!button)return;try{await doAction(button);}catch(err){notify(errorMessage(err));}});
-app.addEventListener('toggle',ev=>{
- const details=ev.target;if(!details.matches?.('.category-expenses')||!details.open)return;
- const panel=document.getElementById('chart-expenses');if(panel&&!panel.hidden){panel.getAnimations().forEach(a=>a.cancel());panel.hidden=true;panel.querySelector('.chart-expenses-list').replaceChildren();app.querySelector('.category-bar[aria-expanded=true]')?.setAttribute('aria-expanded','false');}
- if(details.dataset.loaded)return;
- details.querySelector('.category-expenses-list').innerHTML=categoryExpensesContent(metrics(state,month),details.dataset.category);
- details.dataset.loaded='true';
-},true);
 app.addEventListener('input',ev=>{if(ev.target.id==='transaction-search'){search=ev.target.value;historyLimit=60;document.getElementById('history-list').innerHTML=historyBody();}});
 app.addEventListener('change',async ev=>{
  if(ev.target.id==='color-palette'){applyPalette(ev.target.value);notify('Palette saved');}

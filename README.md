@@ -111,4 +111,4 @@ The Taste redesign uses white and graphite surfaces with a single jade accent in
 
 `node tests/appearance-browser.cjs` verifies the mySaku brand, remembered palette, money-in/out colors and filters, and the full month-arrow touch targets at 320/390/430 pixels in both themes.
 
-Routine successful and in-progress sync status messages stay hidden, including manual-sync success toasts. A database-connection warning appears on failure or while a signed-in device is offline and clears after recovery; conflicting changes still show a review warning. Analyze places Spending overview after the category chart and its selected-expense panel, before the category breakdown.
+Routine successful and in-progress sync status messages stay hidden, including manual-sync success toasts. A database-connection warning appears on failure or while a signed-in device is offline and clears after recovery; conflicting changes still show a review warning. Analyze places Spending overview after the category chart and its selected-expense panel, with Biggest expenses below. Category lists appear only when a chart bar is selected; the repeated category breakdown has been removed.
