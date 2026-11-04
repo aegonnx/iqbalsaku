@@ -40,7 +40,7 @@ h1,h2,h3 {text-wrap:balance}
 p {text-wrap:pretty}
 h1 {font-size:1.75rem;letter-spacing:-.04em;font-weight:600}
 h2 {font-size:1.125rem;letter-spacing:-.025em;font-weight:600}
-.app-shell {padding-inline:20px;padding-top:calc(20px + env(safe-area-inset-top))}
+.app-shell {width:100%;min-width:0;padding-inline:20px;padding-top:calc(20px + env(safe-area-inset-top))}
 .topbar {margin-bottom:26px;gap:8px;flex-wrap:nowrap}
 .brand {font-family:Outfit,var(--font-body);font-size:1.25rem;letter-spacing:-.025em;gap:10px}
 .brand img {width:30px;height:30px}
@@ -48,9 +48,10 @@ h2 {font-size:1.125rem;letter-spacing:-.025em;font-weight:600}
 .topbar .icon-button {border:0;background:var(--surface-raised);border-radius:14px}
 .topbar .icon {width:21px;height:21px}
 .topbar [data-action="theme"] {color:var(--muted)}
-#main-content {gap:24px}
+#main-content {gap:24px;min-width:0;grid-template-columns:minmax(0,1fr)}
+#main-content>* {min-width:0;max-width:100%}
 #main-content>.heading-row {margin-bottom:0}
-.heading-row {gap:8px;align-items:center;flex-wrap:nowrap}
+.heading-row {gap:8px;align-items:center;flex-wrap:wrap}
 .month-control {gap:0;background:var(--surface-raised);border-radius:12px}
 .month-picker {width:98px;font-size:.8125rem;font-weight:500;padding-inline:0}
 .month-control button {min-width:44px;padding:4px}
@@ -118,18 +119,19 @@ h2 {font-size:1.125rem;letter-spacing:-.025em;font-weight:600}
 .category-report {padding-top:4px}
 .category-report .section-head {margin-bottom:16px}
 .category-report .section-head>.muted {font-size:.8125rem}
-.category-chart {overflow-x:auto;overscroll-behavior-x:contain;padding:8px 4px 4px;scroll-padding-inline:4px}
-.category-chart-bars {display:flex;gap:8px;min-width:100%;width:max-content;align-items:end}
-.category-bar {display:flex;flex-direction:column;align-items:stretch;gap:10px;flex:1 0 44px;width:44px;max-width:88px;min-width:44px;padding:0 2px 4px;border-radius:8px;color:var(--muted);text-align:center;white-space:normal}
-.category-bar-plot {height:156px;display:flex;align-items:end;justify-content:center;border-bottom:1px solid var(--line);padding-inline:4px}
+.category-chart {width:100%;min-width:0;max-width:100%;overflow-x:auto;overscroll-behavior-x:contain;padding:8px 4px 4px;scroll-padding-inline:4px}
+.category-chart-bars {display:grid;grid-template-columns:repeat(var(--bar-count),minmax(20px,1fr));gap:4px;width:100%;align-items:end}
+.category-bar {display:flex;flex-direction:column;align-items:stretch;gap:10px;width:100%;max-width:100%;min-width:0;padding:0 2px 4px;border-radius:8px;color:var(--muted);text-align:center;white-space:normal}
+.category-bar-plot {height:156px;display:flex;align-items:end;justify-content:center;border-bottom:1px solid var(--line);padding-inline:2px}
 .category-bar-fill {display:block;width:100%;max-width:44px;height:var(--bar-height);min-height:2px;background:var(--bar-color);border-radius:6px 6px 2px 2px;transform-origin:bottom;box-shadow:inset 1px 1px 0 #ffffff40,inset -2px 0 0 #10261e1a,0 3px 5px #10261e18;transition:filter 200ms ease,box-shadow 200ms ease}
 .category-bar-label {font-size:.75rem;line-height:1.5;height:1.5em;overflow:hidden;display:block;text-overflow:ellipsis;white-space:nowrap}
+.category-chart.is-dense .category-bar-label {display:none}
 .category-bar[aria-pressed="true"] {color:var(--text);background:var(--surface-raised)}
 .category-bar[aria-pressed="true"] .category-bar-label {font-weight:600}
 .category-bar[aria-pressed="true"] .category-bar-fill {box-shadow:inset 1px 1px 0 #ffffff50,inset -2px 0 0 #10261e20,0 4px 8px #10261e26}
 .category-bar:active:not(:disabled) {transform:none}
 @media(hover:hover){.category-bar:hover .category-bar-fill {filter:brightness(1.08)}}
-.chart-selection {display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 12px;padding:14px 16px;margin-top:12px;border-radius:12px;background:var(--surface-raised);min-height:74px}
+.chart-selection {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px 12px;padding:14px 16px;margin-top:12px;border-radius:12px;background:var(--surface-raised);min-height:74px}
 .chart-selection-name {font-size:.875rem;font-weight:500;overflow-wrap:anywhere}
 .chart-selection-amount {font-size:.875rem;font-weight:600;font-variant-numeric:tabular-nums;overflow-wrap:anywhere;text-align:right;min-width:0}
 .chart-selection-share {grid-column:1/-1;font-size:.75rem;color:var(--muted)}

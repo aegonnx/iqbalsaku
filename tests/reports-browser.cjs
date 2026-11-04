@@ -84,19 +84,22 @@ const fs=require('node:fs'),path=require('node:path'),assert=require('node:asser
   assert.equal(await page.locator('.report-total').textContent(),'Rp135.000');assert.equal(await page.locator('.category-bar[data-id=dating]').count(),0);
   await page.locator('.category-bar[data-id=makan]').tap();assert.match(await page.locator('#chart-expenses .category-summary-note').textContent(),/Rp125\.000/);assert.deepEqual(await page.locator('#chart-expenses .transaction-title').allTextContents(),['September meal']);
   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);assert.deepEqual(errors,[]);
-  // Six categories, including a very small expense, remain reachable without page overflow.
+  // All eleven categories fit the phone and the compact shell, including very small expenses.
   await page.evaluate(async()=>{
    const {ExpenseRepository}=await import('./storage.mjs'),repo=new ExpenseRepository(),s=await repo.load();
-   s.transactions=s.categories.slice(0,6).map((c,i)=>({id:'chart-'+i,description:c.name,categoryId:c.id,amount:[1000000,200000,100000,50000,2000,1][i],date:'2026-10-10',note:'',createdAt:'2026-10-10T00:00:00Z'}));await repo.save(s);
+   s.transactions=s.categories.slice(0,11).map((c,i)=>({id:'chart-'+i,description:c.name,categoryId:c.id,amount:[1000000,200000,100000,50000,20000,10000,5000,3000,2000,500,1][i],date:'2026-10-10',note:'',createdAt:'2026-10-10T00:00:00Z'}));await repo.save(s);
   });await page.reload();await page.locator('#selected-month').fill('2026-10');await page.locator('#selected-month').dispatchEvent('change');
-  for(const width of [320,390,430]){
-   await page.setViewportSize({width,height:844});const bars=page.locator('.category-bar');assert.equal(await bars.count(),6);
+  for(const width of [320,360,390,430,665,1280]){
+   await page.setViewportSize({width,height:844});const bars=page.locator('.category-bar');assert.equal(await bars.count(),11);
    await bars.last().tap();assert.equal(await bars.last().getAttribute('aria-pressed'),'true');assert.equal(await page.locator('.chart-selection-amount').textContent(),'Rp1');
    assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);
-   assert.ok((await bars.last().boundingBox()).width>=44);
+   assert.ok((await bars.last().boundingBox()).width>=20);
+   const fit=await page.evaluate(()=>{const shell=document.querySelector('.app-shell'),main=document.getElementById('main-content'),chart=document.querySelector('.category-chart'),bars=document.querySelector('.category-chart-bars');const r=shell.getBoundingClientRect(),css=getComputedStyle(shell);const left=r.left+parseFloat(css.paddingLeft)+parseFloat(css.borderLeftWidth),right=r.right-parseFloat(css.paddingRight)-parseFloat(css.borderRightWidth);return {left,right,shellWidth:r.width,mainRight:main.getBoundingClientRect().right,chartRight:chart.getBoundingClientRect().right,barsRight:bars.getBoundingClientRect().right,chartScroll:chart.scrollWidth,chartWidth:chart.clientWidth};});
+   assert.ok(fit.shellWidth<=480&&fit.mainRight<=fit.right+1&&fit.chartRight<=fit.right+1&&fit.barsRight<=fit.right+1,JSON.stringify({width,fit}));assert.ok(fit.chartScroll<=fit.chartWidth,JSON.stringify({width,fit}));
    if(process.env.SAKU_AXE){await page.addScriptTag({path:process.env.SAKU_AXE});const issues=await page.evaluate(async()=>{await Promise.all(document.getAnimations().map(a=>a.finished.catch(()=>{})));return (await axe.run(document.querySelector('.category-report'),{runOnly:{type:'tag',values:['wcag2a','wcag2aa','wcag21aa','best-practice']}})).violations.map(v=>({id:v.id,nodes:v.nodes.map(n=>n.target)}));});assert.deepEqual(issues,[]);}
-   if(width===390){fs.mkdirSync('output/category-chart',{recursive:true});await page.locator('.category-report').screenshot({path:'output/category-chart/'+theme+'.png'});}
+   if(width===390||width===665){fs.mkdirSync('output/category-chart',{recursive:true});await page.locator('.category-report').screenshot({path:'output/category-chart/'+width+'-'+theme+'-chart.png',animations:'disabled'});await page.evaluate(()=>{document.activeElement.blur();window.scrollTo(0,0);});await page.screenshot({path:'output/category-chart/'+width+'-'+theme+'-page.png',animations:'disabled'});}
   }
+  await page.setViewportSize({width:390,height:844});await page.evaluate(()=>document.documentElement.style.fontSize='32px');assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);await page.evaluate(()=>document.documentElement.style.removeProperty('font-size'));
   await page.emulateMedia({reducedMotion:'reduce'});await page.reload();await page.locator('#selected-month').fill('2026-10');await page.locator('#selected-month').dispatchEvent('change');
   assert.equal(await page.locator('.category-bar-fill').first().evaluate(n=>getComputedStyle(n).animationName),'none');await page.locator('.category-bar').last().tap();assert.equal(await page.locator('.chart-selection').evaluate(n=>n.getAnimations().length),0);
   assert.equal(await page.locator('#chart-expenses').evaluate(n=>n.getAnimations().length),0);
@@ -105,6 +108,9 @@ const fs=require('node:fs'),path=require('node:path'),assert=require('node:asser
   await page.reload();await page.locator('#selected-month').fill('2026-10');await page.locator('#selected-month').dispatchEvent('change');await page.locator('.category-bar[data-id="'+activeCategory+'"]').tap();
   assert.equal(await page.locator('#chart-expenses .transaction').count(),5);await page.locator('[data-action=more-chart-expenses]').tap();assert.equal(await page.locator('#chart-expenses .transaction').count(),10);await page.locator('[data-action=more-chart-expenses]').tap();assert.equal(await page.locator('#chart-expenses .transaction').count(),12);assert.equal(await page.locator('[data-action=more-chart-expenses]').count(),0);
   assert.deepEqual((await page.locator('#chart-expenses .transaction-title').allTextContents()).slice(0,11),['Paged 10','Paged 9','Paged 8','Paged 7','Paged 6','Paged 5','Paged 4','Paged 3','Paged 2','Paged 1','Paged 0']);
+  // Many custom categories may scroll inside the chart, never stretch the app shell.
+  await page.evaluate(async()=>{const {ExpenseRepository}=await import('./storage.mjs'),repo=new ExpenseRepository(),s=await repo.load();for(let i=0;i<20;i++){const id='extra-'+i;s.categories.push({id,name:'Custom category '+i,icon:'grid',color:'#23745b'});s.transactions.push({id:'extra-row-'+i,description:'Custom item '+i,categoryId:id,amount:100+i,date:'2026-10-10',note:'',createdAt:'2026-10-10T00:00:00Z'});}await repo.save(s);});await page.reload();await page.setViewportSize({width:320,height:844});await page.locator('#selected-month').fill('2026-10');await page.locator('#selected-month').dispatchEvent('change');
+  await page.locator('.category-bar').last().tap();assert.equal(await page.locator('.category-bar').last().getAttribute('aria-expanded'),'true');assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);assert.ok((await page.locator('#main-content').boundingBox()).width<=288);
   await context.close();console.log('PASS '+theme+': clean report layout, chart expense sorting and pagination, biggest expenses, editing, escaped text, summaries, mobile layouts and reduced motion');
  }}finally{await browser.close();}
 })().catch(err=>{console.error(err);process.exitCode=1;});
