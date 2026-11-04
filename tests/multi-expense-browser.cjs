@@ -13,6 +13,7 @@ const fs=require('node:fs'),path=require('node:path'),assert=require('node:asser
   });
   const page=await context.newPage(),errors=[];page.on('pageerror',err=>errors.push(err.message));
   const read=()=>page.evaluate(async()=>{const {ExpenseRepository}=await import('./storage.mjs');return new ExpenseRepository().load();});
+  await page.clock.install({time:new Date('2026-10-07T12:00:00')});
   await page.goto('https://multi.test/#transactions');await page.locator('.nav-add').tap();await page.waitForFunction(()=>!document.getElementById('expense-dialog').dataset.motion);
   await page.locator('#expense-date').fill('2026-10-07');await page.locator('#expense-category').selectOption('snack');
   await page.evaluate(()=>{Object.defineProperty(visualViewport,'height',{configurable:true,value:340});visualViewport.dispatchEvent(new Event('resize'));});await page.waitForFunction(()=>document.documentElement.classList.contains('keyboard-open'));

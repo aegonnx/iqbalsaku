@@ -10,6 +10,7 @@ import {installPullRefresh} from './pull-refresh.mjs';
 import {CloudController} from './cloud-ui.mjs';
 import {indexHistory,historyPage} from './history.mjs';
 import {rememberFocus,restoreFocus} from './focus.mjs';
+import {pieSlices,piePercentage} from './pie-chart.mjs';
 import {spendingOverview} from './spending-overview.mjs';
 const localRepo=new ExpenseRepository();
 let repo=localRepo,cloud,income,legacyIncome=null;
@@ -87,8 +88,10 @@ function showChartExpenses(key,limit=5,{animate=true}={}){
  if(animate&&!matchMedia('(prefers-reduced-motion: reduce)').matches){panel.animate([{opacity:0,transform:'translateY(16px)'},{opacity:1,transform:'translateY(0)'}],{duration:450,easing:'cubic-bezier(.22,0,.2,1)'});}
 }
 function categoryChart(m,ranked){
- const highest=m.categories[ranked[0].id];
- return '<div class="category-chart'+(ranked.length>7?' is-dense':'')+'" role="group" aria-label="Spending by category. Select a bar for details."><div class="category-chart-bars" style="--bar-count:'+ranked.length+'">'+ranked.map((c,i)=>{const amount=m.categories[c.id],pct=amount/m.spent*100;return '<button type="button" class="category-bar" aria-controls="chart-expenses" aria-expanded="false" data-action="select-chart-category" data-id="'+e(c.id)+'" aria-pressed="'+(i===0)+'" aria-label="'+e(c.name+', '+format(amount)+', '+pct.toFixed(1)+'% of spending')+'" style="--bar-color:'+themeColor(c.id)+';--bar-height:'+(amount/highest*100)+'%"><span class="category-bar-plot" aria-hidden="true"><span class="category-bar-fill"></span></span><span class="category-bar-label" aria-hidden="true">'+e(c.name)+'</span></button>';}).join('')+'</div></div><div class="chart-selection" role="status" aria-live="polite" aria-atomic="true"><span class="chart-selection-name">'+e(ranked[0].name)+'</span><strong class="chart-selection-amount">'+format(highest)+'</strong><span class="chart-selection-share">'+(highest/m.spent*100).toFixed(1)+'% of spending</span></div><section id="chart-expenses" class="chart-expenses" hidden aria-labelledby="chart-expenses-title"><div class="section-head"><h3 id="chart-expenses-title">Expenses</h3><button type="button" class="text-button" data-action="hide-chart-expenses">Hide list</button></div><div class="chart-expenses-list"></div></section>';
+ const highest=m.categories[ranked[0].id],slices=pieSlices(ranked.map(c=>m.categories[c.id]));
+ const sectors=ranked.map((c,i)=>{const slice=slices[i];return '<path class="pie-slice" role="button" tabindex="0" data-action="select-chart-category" data-id="'+e(c.id)+'" aria-controls="chart-expenses" aria-expanded="false" aria-pressed="'+(i===0)+'" aria-label="'+e(c.name+', '+format(m.categories[c.id])+', '+piePercentage(m.categories[c.id],m.spent)+' of spending')+'" d="'+slice.path+'" style="--slice-color:'+themeColor(c.id)+';--slice-x:'+slice.offsetX+'px;--slice-y:'+slice.offsetY+'px"></path>';}).join('');
+ const percentages=slices.map(slice=>slice.share>=.08?'<text class="pie-percentage" x="'+slice.labelX+'" y="'+slice.labelY+'" text-anchor="middle" dominant-baseline="central" aria-hidden="true">'+Math.round(slice.share*100)+'%</text>':'').join('');
+ return '<div class="category-chart"><svg class="category-pie" viewBox="0 0 240 240" role="group" aria-label="Spending by category. Select a slice for expenses."><defs><radialGradient id="pie-highlight" cx="35%" cy="15%" r="85%"><stop offset="0" stop-color="#fff" stop-opacity=".16"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient></defs><circle class="pie-depth" cx="120" cy="124" r="100" aria-hidden="true"/><g class="pie-sectors">'+sectors+'</g><circle class="pie-highlight" cx="120" cy="120" r="100" fill="url(#pie-highlight)" aria-hidden="true"/>'+percentages+'</svg><label class="field pie-category-picker" for="pie-category">Category<select id="pie-category">'+ranked.map(c=>'<option value="'+e(c.id)+'">'+e(c.name)+' ('+e(piePercentage(m.categories[c.id],m.spent))+')</option>').join('')+'</select></label></div><div class="chart-selection" role="status" aria-live="polite" aria-atomic="true"><span class="chart-selection-name">'+e(ranked[0].name)+'</span><strong class="chart-selection-amount">'+format(highest)+'</strong><span class="chart-selection-share">'+e(piePercentage(highest,m.spent))+' of spending</span></div><section id="chart-expenses" class="chart-expenses" hidden aria-labelledby="chart-expenses-title"><div class="section-head"><h3 id="chart-expenses-title">Expenses</h3><button type="button" class="text-button" data-action="hide-chart-expenses">Hide list</button></div><div class="chart-expenses-list"></div></section>';
 }
 function distribution(m,all=false){
  const ordered=state.categories.slice().sort((a,b)=>(m.categories[b.id]||0)-(m.categories[a.id]||0));
@@ -156,7 +159,7 @@ function showConfirm(title,copy,fields,action,label='Confirm',className=''){
  if(dialogActive(confirmDialog))return;
  confirmDialog.className=className;
  confirmDialog.setAttribute('aria-labelledby','confirm-title');confirmDialog.setAttribute('aria-describedby','confirm-copy');
- confirmDialog.innerHTML='<div class="dialog-inner"><div class="dialog-header"><h2 id="confirm-title">'+e(title)+'</h2><button class="icon-button" data-close="confirm" aria-label="Close">'+icon('close')+'</button></div><p id="confirm-copy" class="confirmation-copy">'+e(copy)+'</p><form id="confirm-form" class="confirm-form">'+fields+'<p class="error-message" id="confirm-error" role="alert"></p><div class="form-actions"><button type="button" class="secondary" data-close="confirm">Cancel</button><button class="primary" type="submit">'+e(label)+'</button></div></form></div>';
+ confirmDialog.innerHTML='<div class="dialog-inner"><div class="dialog-header"><h2 id="confirm-title">'+e(title)+'</h2><button class="icon-button" data-close="confirm" aria-label="Close">'+icon('close')+'</button></div><form id="confirm-form" class="confirm-form"><p id="confirm-copy" class="confirmation-copy">'+e(copy)+'</p>'+fields+'<p class="error-message" id="confirm-error" role="alert"></p><div class="form-actions"><button type="button" class="secondary" data-close="confirm">Cancel</button><button class="primary" type="submit">'+e(label)+'</button></div></form></div>';
  const form=document.getElementById('confirm-form');
  form.onsubmit=async ev=>{ev.preventDefault();const button=confirmDialog.querySelector('[data-submit-form]');if(button.disabled||dialogClosing(confirmDialog))return;button.disabled=true;try{await action(new FormData(form));await closeDialog(confirmDialog);render();}catch(err){document.getElementById('confirm-error').textContent=errorMessage(err);button.disabled=false;}};
  pinDialogActions(confirmDialog,'confirm-form');openDialog(confirmDialog,{focus:form.querySelector('input:not([type=hidden]),textarea,select')||confirmDialog.querySelector('[data-close]')});
@@ -191,16 +194,16 @@ async function doAction(button){
   const c=cat(key);if(!c)break;
   if(button.getAttribute('aria-expanded')==='true')break;
   const m=metrics(state,month),amount=m.categories[key]||0,selection=app.querySelector('.chart-selection');if(!selection||!m.spent)break;
-  app.querySelectorAll('.category-bar').forEach(bar=>{bar.setAttribute('aria-pressed',String(bar===button));bar.setAttribute('aria-expanded',String(bar===button));});
+  app.querySelectorAll('.pie-slice').forEach(bar=>{bar.setAttribute('aria-pressed',String(bar===button));bar.setAttribute('aria-expanded',String(bar===button));});
   selection.querySelector('.chart-selection-name').textContent=c.name;
   selection.querySelector('.chart-selection-amount').textContent=format(amount);
-  selection.querySelector('.chart-selection-share').textContent=(amount/m.spent*100).toFixed(1)+'% of spending';
-  showChartExpenses(key);
+  selection.querySelector('.chart-selection-share').textContent=piePercentage(amount,m.spent)+' of spending';
+  document.getElementById('pie-category').value=key;showChartExpenses(key);
   if(!matchMedia('(prefers-reduced-motion: reduce)').matches){selection.getAnimations().forEach(a=>a.cancel());selection.animate([{opacity:.5,transform:'translateY(4px)'},{opacity:1,transform:'translateY(0)'}],{duration:450,easing:'cubic-bezier(.22,0,.2,1)'});}
   break;
  }
  case 'more-chart-expenses':{showChartExpenses(key,Number(button.dataset.limit),{animate:false});const more=app.querySelector('[data-action=more-chart-expenses]');if(more)more.focus({preventScroll:true});else{const title=document.getElementById('chart-expenses-title');title.tabIndex=-1;title.focus({preventScroll:true});}break;}
- case 'hide-chart-expenses':{const panel=document.getElementById('chart-expenses'),bar=app.querySelector('.category-bar[aria-expanded=true]');panel.getAnimations().forEach(a=>a.cancel());panel.hidden=true;panel.querySelector('.chart-expenses-list').replaceChildren();bar?.setAttribute('aria-expanded','false');bar?.focus({preventScroll:true});break;}
+ case 'hide-chart-expenses':{const panel=document.getElementById('chart-expenses'),bar=app.querySelector('.pie-slice[aria-expanded=true]');panel.getAnimations().forEach(a=>a.cancel());panel.hidden=true;panel.querySelector('.chart-expenses-list').replaceChildren();bar?.setAttribute('aria-expanded','false');bar?.focus({preventScroll:true});break;}
  case 'toggle-overview':{const expanded=button.getAttribute('aria-expanded')!=='true';document.getElementById('spending-overview-copy')?.classList.toggle('overview-collapsed',!expanded);button.setAttribute('aria-expanded',String(expanded));button.textContent=expanded?'Read less':'Read more';break;}
  case 'more-history':{historyLimit+=60;document.getElementById('history-list').innerHTML=historyBody();const more=app.querySelector('[data-action=more-history]');if(more)more.focus({preventScroll:true});else{const status=app.querySelector('.history-pagination p');status?.setAttribute('tabindex','-1');status?.focus({preventScroll:true});}break;}
  case 'page':navigate(button.dataset.page);break;
@@ -229,9 +232,11 @@ function confirmIncomeImport(saved){
  showConfirm('Import saved income?', 'Add '+preview.added+' saved records to '+(cloud.user?'this account':'this tracker')+'? Expenses and existing budgets stay in place. Saved salary is counted only as the starting budget, never as extra income.','',async()=>{await commit(next=>{const result=consolidateIncome(next,saved);Object.assign(next,result.state);});notify('Saved income imported');},'Import income');
 }
 app.addEventListener('click',async ev=>{const button=ev.target.closest('[data-action]');if(!button)return;try{await doAction(button);}catch(err){notify(errorMessage(err));}});
+app.addEventListener('keydown',ev=>{const slice=ev.target.closest('.pie-slice');if(slice&&(ev.key==='Enter'||ev.key===' ')){ev.preventDefault();doAction(slice).catch(err=>notify(errorMessage(err)));}});
 app.addEventListener('input',ev=>{if(ev.target.id==='transaction-search'){search=ev.target.value;historyLimit=60;document.getElementById('history-list').innerHTML=historyBody();}});
 app.addEventListener('change',async ev=>{
  if(ev.target.id==='color-palette'){applyPalette(ev.target.value);notify('Palette saved');}
+ if(ev.target.id==='pie-category'){const slice=[...app.querySelectorAll('.pie-slice')].find(node=>node.dataset.id===ev.target.value);if(slice)await doAction(slice);}
  if(ev.target.id==='selected-month')switchMonth(ev.target.value);
  if(ev.target.id==='category-filter'){
   categoryFilter=ev.target.value;historyLimit=60;

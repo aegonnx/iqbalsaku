@@ -35,6 +35,8 @@ Success means reliable saving, correct balances after every change, fast entry w
 
 ## Capabilities and Constraints
 
+- Analyze uses an adaptive interactive pie chart, replacing bars. Preserve category colors, percentages, tap/keyboard selection and sorted expense drill-down. Read and all popups must fit phone width without horizontal scrolling, including enlarged text and long user-entered content.
+
 - Amount entry defaults to thousands: typing `500` means 500,000. Show the full amount in a live preview and store full numeric values. Preserve exact decimal entry and existing backup values. Do not restore a unit-switch button.
 - Default currency is IDR / Rp, formatted with Indonesian separators, such as Rp2.500.000. Preserve configurable currency and budget-period start day.
 - Amount, category/source, and optional description are immediately visible entry fields. Date defaults to the device's local date; expense date is immediately visible and note remains in optional details. Preserve quick expenses and recent-description suggestions.
