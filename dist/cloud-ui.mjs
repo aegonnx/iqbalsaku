@@ -1,7 +1,6 @@
 import {createCloudClient} from './cloud.mjs';
 import {SyncRepository,SupabaseRemote} from './sync.mjs';
 
-const labels={synced:'Synced online',syncing:'Syncing…',pending:'Saved on this device · Waiting to sync',conflict:'Changes need review · Open Settings'};
 export class CloudController{
  constructor({store,lock,activate,refresh,showConfirm,notify,download,escape}){Object.assign(this,{store,lock,activate,refresh,showConfirm,notify,download,escape});this.client=null;this.user=null;this.repository=null;this.status='';this.interval=null;this.sessionQueue=Promise.resolve();this.lastError='';}
  async init(){
@@ -10,10 +9,11 @@ export class CloudController{
    const {data,error}=await this.client.auth.getSession();if(error)throw error;
    await this.setSession(data.session);
    this.client.auth.onAuthStateChange((_event,session)=>{setTimeout(()=>this.setSession(session).catch(()=>this.notify('Could not open this account. Please retry signing in.')),0);});
-   window.addEventListener('online',()=>this.repository?.sync());
+   window.addEventListener('online',()=>{this.updateStatus();this.repository?.sync();});
+   window.addEventListener('offline',()=>this.updateStatus());
    document.addEventListener('visibilitychange',()=>{if(!document.hidden)this.repository?.sync();});
    this.interval=setInterval(()=>{if(!document.hidden)this.repository?.sync();},30000);
-  }catch{this.notify('Online sync is unavailable. Your device data is unchanged.');}
+  }catch(error){this.status='unavailable';this.lastError=error?.message||'Online sync is unavailable.';this.updateStatus();}
  }
  setSession(session){
   this.sessionQueue=this.sessionQueue.catch(()=>{}).then(()=>this.applySession(session));return this.sessionQueue;
@@ -21,26 +21,33 @@ export class CloudController{
  async applySession(session){
   const user=session?.user||null;
   if(user?.id===this.user?.id)return;
-  await this.lock(async()=>{this.repository?.close();this.user=user;this.repository=null;this.status='';});
+  await this.lock(async()=>{this.repository?.close();this.user=user;this.repository=null;this.status='';this.lastError='';});
   if(!user){await this.activate(this.store);return;}
   const repository=new SyncRepository({store:this.store,remote:new SupabaseRemote(this.client,user.id),userId:user.id,lock:this.lock,
-   onStatus:(status,error)=>{if(this.repository===repository){this.status=status;this.lastError=error?.message||'';this.updateStatus();}},
+   onStatus:(status,error)=>{if(this.repository===repository){this.status=status;if(error)this.lastError=error.message||'Connection failed.';else if(status==='synced')this.lastError='';this.updateStatus();}},
    onChange:async()=>{if(this.repository===repository)await this.refresh(repository);}});
   this.repository=repository;
   await this.activate(repository);
   await repository.sync();
  }
  updateStatus(){
-  for(const node of document.querySelectorAll('[data-sync-status]'))node.textContent=labels[this.status]||'Checking online copy…';
-  for(const node of document.querySelectorAll('[data-sync-error]'))node.textContent=this.lastError;
+  const message=this.connectionMessage();
+  for(const node of document.querySelectorAll('[data-sync-status]')){node.textContent=message;node.hidden=!message;node.dataset.syncState=this.status;}
+  for(const node of document.querySelectorAll('[data-sync-error]')){node.textContent=this.lastError;node.hidden=!this.lastError;}
   for(const node of document.querySelectorAll('[data-sync-conflict]'))node.hidden=this.status!=='conflict';
  }
- banner(){return this.user?'<p class="sync-banner" role="status" data-sync-status>'+this.escape(labels[this.status]||'Checking online copy…')+'</p>':'';}
+ connectionMessage(){
+  if(this.status==='conflict')return 'Changes need review. Open Settings.';
+  if(this.status==='unavailable'||this.lastError||(this.user&&navigator.onLine===false))return 'Database connection unavailable. Your data stays saved on this device. Reconnect to sync.';
+  return '';
+ }
+ statusMarkup(className){const message=this.connectionMessage();return '<p class="'+className+'" role="status" data-sync-status data-sync-state="'+this.escape(this.status)+'" '+(message?'':'hidden')+'>'+this.escape(message)+'</p>';}
+ banner(){return this.statusMarkup('sync-banner');}
  section(){
   const head='<section class="card settings-card"><h2>Online sync</h2>';
   if(!this.client)return head+'<p class="muted">This build saves on this device. Online sync has not been connected yet.</p></section>';
   if(!this.user)return head+'<p class="muted">Sign in to keep the same expenses and income on your phone and computer. Your existing device data stays separate until you import a backup into your account.</p><div class="button-row"><button class="primary" data-action="cloud-signin">Sign in</button><button class="secondary" data-action="cloud-signup">Create account</button></div></section>';
-  return head+'<p class="account-email">'+this.escape(this.user.email||'Signed in')+'</p><p class="muted" role="status" data-sync-status>'+this.escape(labels[this.status]||'Checking online copy…')+'</p><p class="muted" data-sync-error>'+this.escape(this.lastError)+'</p><div class="button-row"><button class="secondary" data-action="cloud-sync">Sync now</button><button class="secondary" data-action="cloud-signout">Sign out</button></div><div class="sync-conflict" data-sync-conflict '+(this.status==='conflict'?'':'hidden')+'><p>Both devices changed the same information. Export a backup before choosing a copy.</p><div class="button-row"><button class="secondary" data-action="cloud-keep-online">Keep online copy</button><button class="secondary" data-action="cloud-keep-device">Keep this device’s copy</button></div></div><small>Changes save on this device first, then sync online. Keep JSON backups too.</small></section>';
+  return head+'<p class="account-email">'+this.escape(this.user.email||'Signed in')+'</p>'+this.statusMarkup('muted')+'<p class="muted" data-sync-error '+(this.lastError?'':'hidden')+'>'+this.escape(this.lastError)+'</p><div class="button-row"><button class="secondary" data-action="cloud-sync">Sync now</button><button class="secondary" data-action="cloud-signout">Sign out</button></div><div class="sync-conflict" data-sync-conflict '+(this.status==='conflict'?'':'hidden')+'><p>Both devices changed the same information. Export a backup before choosing a copy.</p><div class="button-row"><button class="secondary" data-action="cloud-keep-online">Keep online copy</button><button class="secondary" data-action="cloud-keep-device">Keep this device’s copy</button></div></div><small>Changes save on this device first, then sync online. Keep JSON backups too.</small></section>';
  }
  async action(action){
   if(!action.startsWith('cloud-'))return false;
@@ -62,7 +69,7 @@ export class CloudController{
     if(repository){await repository.sync();const record=await repository.record();if(record.pending)throw new Error('Some changes are only on this device. Sync or export a backup before signing out.');}
     const {error}=await this.client.auth.signOut({scope:'local'});if(error)throw error;await this.setSession(null);this.notify('Signed out');break;
    }
-   case 'cloud-sync':{const result=await this.repository?.sync();if(result?.error)throw new Error(result.error.message||'Could not sync. Your changes are still saved on this device.');this.notify('Synced online');break;}
+   case 'cloud-sync':{const result=await this.repository?.sync();if(result?.error)throw new Error(result.error.message||'Could not sync. Your changes are still saved on this device.');break;}
    case 'cloud-keep-online':case 'cloud-keep-device':{
     const repository=this.repository;if(!repository)throw new Error('Sign in first.');
     const online=action==='cloud-keep-online';

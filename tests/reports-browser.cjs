@@ -24,6 +24,8 @@ const fs=require('node:fs'),path=require('node:path'),assert=require('node:asser
   });await page.reload();await page.locator('.report-total').waitFor();
   await page.locator('#selected-month').fill('2026-10');await page.locator('#selected-month').dispatchEvent('change');
   assert.equal(await page.locator('.report-total').textContent(),'Rp60.000');
+  assert.equal(await page.evaluate(()=>Boolean(document.querySelector('.category-chart').compareDocumentPosition(document.querySelector('.control-notice'))&Node.DOCUMENT_POSITION_FOLLOWING)),true);
+  assert.equal(await page.evaluate(()=>Boolean(document.querySelector('.control-notice').compareDocumentPosition(document.querySelector('.category-breakdown'))&Node.DOCUMENT_POSITION_FOLLOWING)),true);
   assert.equal(await page.locator('#spending-overview-title').textContent(),'Spending overview');
   assert.match(await page.locator('.control-notice p').textContent(),/ahead of an even daily pace/);
   assert.ok((await page.locator('.control-notice p').textContent()).length>200);
