@@ -103,6 +103,8 @@ Navigation, disclosures, theme colors, and pull-refresh use restrained 180–240
 
 ## Visual design
 
+Analyze's category chart uses vertical bars in the same category colors as the icons and breakdown. Tap a bar (or focus it and press Enter/Space) to see its full category name, amount and percentage. The chart scrolls horizontally when needed, keeping each target at least 44 px wide. Heights are relative to the largest category, with a 2 px minimum for tiny nonzero values. Entrance and selection animations respect reduced motion.
+
 The Taste redesign uses white and graphite surfaces with a single jade accent in both themes. Read emphasizes remaining balance and a combined money history; Analyze shows total spending, a segmented category chart and daily guidance. `dist/design.css` owns the visual layer while the original stylesheet retains keyboard layout mechanics. DESIGN.md records the visual decisions. Income uses the same version-1 financial document and account sync as expenses.
 
 `node tests/reports-browser.cjs` verifies chart percentages, complete totals, category budgets, historical summaries, over-budget states and empty months in both themes using synthetic data.

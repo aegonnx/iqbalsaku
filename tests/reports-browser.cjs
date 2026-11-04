@@ -34,12 +34,16 @@ const fs=require('node:fs'),path=require('node:path'),assert=require('node:asser
   await toggle.tap();assert.equal(await toggle.textContent(),'Read less');assert.equal(await toggle.getAttribute('aria-expanded'),'true');assert.ok((await copy.boundingBox()).height>collapsedHeight);
   await toggle.tap();assert.equal(await toggle.textContent(),'Read more');assert.equal(await toggle.getAttribute('aria-expanded'),'false');assert.equal((await copy.boundingBox()).height,collapsedHeight);
   if(theme==='dark'){fs.mkdirSync('tmp',{recursive:true});await page.locator('.control-notice').screenshot({path:'tmp/spending-overview-preview.png'});}
-  assert.equal(await page.locator('.spending-strip>span').count(),3);
+  assert.equal(await page.locator('.category-bar-fill').count(),3);
+  const bar=page.locator('.category-bar[data-id=snack]');await bar.tap();assert.equal(await bar.getAttribute('aria-pressed'),'true');
+  assert.equal(await page.locator('.chart-selection-name').textContent(),'Snack');assert.equal(await page.locator('.chart-selection-amount').textContent(),'Rp20.000');assert.equal(await page.locator('.chart-selection-share').textContent(),'33.3% of spending');
+  await page.locator('.category-bar[data-id=makan]').focus();await page.keyboard.press('Enter');assert.equal(await page.locator('.chart-selection-name').textContent(),'Makan');assert.equal(await page.locator('.category-bar[aria-pressed=true]').count(),1);
+  const barHeights=await page.locator('.category-bar-fill').evaluateAll(nodes=>nodes.map(n=>n.getBoundingClientRect().height));assert.ok(Math.abs(barHeights[0]/barHeights[1]-1.5)<.05);
   assert.deepEqual(await page.locator('.category-share small').allTextContents(),['50.0%','33.3%','16.7%']);
-  const categoryColors=await page.locator('.spending-strip>span').evaluateAll(nodes=>nodes.map(node=>getComputedStyle(node).backgroundColor));assert.equal(new Set(categoryColors).size,3);
+  const categoryColors=await page.locator('.category-bar-fill').evaluateAll(nodes=>nodes.map(node=>getComputedStyle(node).backgroundColor));assert.equal(new Set(categoryColors).size,3);
   const footer=await page.locator('.bottom-nav').boundingBox();assert.equal(footer.y+footer.height,844);assert.equal(footer.width,320);
   await page.evaluate(async()=>{const {ExpenseRepository}=await import('./storage.mjs'),repo=new ExpenseRepository(),s=await repo.load();s.categories.reverse();await repo.save(s);});
-  await page.reload();await page.locator('.spending-strip').waitFor();assert.deepEqual(await page.locator('.spending-strip>span').evaluateAll(nodes=>nodes.map(node=>getComputedStyle(node).backgroundColor)),categoryColors);
+  await page.reload();await page.locator('.category-chart').waitFor();assert.deepEqual(await page.locator('.category-bar-fill').evaluateAll(nodes=>nodes.map(node=>getComputedStyle(node).backgroundColor)),categoryColors);
   assert.equal(await page.locator('.report-budget-foot').textContent(),'60.0% usedRp40.000 left');
   await page.locator('[data-page=transactions]').tap();assert.equal(await page.locator('[data-testid=remaining]').textContent(),'Rp40.000');
   assert.equal(await page.locator('.simple-budget-row').count(),0);assert.equal(await page.locator('h2',{hasText:'Money in & out'}).count(),1);
@@ -53,7 +57,7 @@ const fs=require('node:fs'),path=require('node:path'),assert=require('node:asser
   assert.match(await summaryOnly.locator('.category-summary-note').textContent(),/Rp125\.000/);assert.match(await summaryOnly.locator('.category-summary-note').textContent(),/no individual|not supplied/i);
   assert.equal(await summaryOnly.locator('.transaction').count(),0);
   await page.locator('#selected-month').fill('2026-11');await page.locator('#selected-month').dispatchEvent('change');
-  assert.equal(await page.locator('.report-total').textContent(),'Rp0');assert.equal(await page.locator('.spending-strip').count(),0);assert.ok(await page.locator('.empty').isVisible());
+  assert.equal(await page.locator('.report-total').textContent(),'Rp0');assert.equal(await page.locator('.category-chart').count(),0);assert.ok(await page.locator('.empty').isVisible());
   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);assert.deepEqual(errors,[]);
   // Category details contain this period's expenses, ranked by amount with stable ties.
   await page.evaluate(async()=>{
@@ -96,6 +100,21 @@ const fs=require('node:fs'),path=require('node:path'),assert=require('node:asser
   assert.deepEqual(await mixedSummary.locator('.transaction-title').allTextContents(),['September meal']);assert.match(await mixedSummary.locator('.transaction-meta').textContent(),/20 Sep/);
   assert.match(await mixedSummary.locator('.category-summary-note').textContent(),/Rp125\.000/);assert.match(await mixedSummary.locator('.category-summary-note').textContent(),/no individual|not supplied/i);
   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);assert.deepEqual(errors,[]);
+  // Six categories, including a very small expense, remain reachable without page overflow.
+  await page.evaluate(async()=>{
+   const {ExpenseRepository}=await import('./storage.mjs'),repo=new ExpenseRepository(),s=await repo.load();
+   s.transactions=s.categories.slice(0,6).map((c,i)=>({id:'chart-'+i,description:c.name,categoryId:c.id,amount:[1000000,200000,100000,50000,2000,1][i],date:'2026-10-10',note:'',createdAt:'2026-10-10T00:00:00Z'}));await repo.save(s);
+  });await page.reload();await page.locator('#selected-month').fill('2026-10');await page.locator('#selected-month').dispatchEvent('change');
+  for(const width of [320,390,430]){
+   await page.setViewportSize({width,height:844});const bars=page.locator('.category-bar');assert.equal(await bars.count(),6);
+   await bars.last().tap();assert.equal(await bars.last().getAttribute('aria-pressed'),'true');assert.equal(await page.locator('.chart-selection-amount').textContent(),'Rp1');
+   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);
+   assert.ok((await bars.last().boundingBox()).width>=44);
+   if(process.env.SAKU_AXE){await page.addScriptTag({path:process.env.SAKU_AXE});const issues=await page.evaluate(async()=>{await Promise.all(document.getAnimations().map(a=>a.finished.catch(()=>{})));return (await axe.run(document.querySelector('.category-report'),{runOnly:{type:'tag',values:['wcag2a','wcag2aa','wcag21aa','best-practice']}})).violations.map(v=>({id:v.id,nodes:v.nodes.map(n=>n.target)}));});assert.deepEqual(issues,[]);}
+   if(width===390){fs.mkdirSync('output/category-chart',{recursive:true});await page.locator('.category-report').screenshot({path:'output/category-chart/'+theme+'.png'});}
+  }
+  await page.emulateMedia({reducedMotion:'reduce'});await page.reload();await page.locator('#selected-month').fill('2026-10');await page.locator('#selected-month').dispatchEvent('change');
+  assert.equal(await page.locator('.category-bar-fill').first().evaluate(n=>getComputedStyle(n).animationName),'none');await page.locator('.category-bar').last().tap();assert.equal(await page.locator('.chart-selection').evaluate(n=>n.getAnimations().length),0);
   await context.close();console.log('PASS '+theme+': report totals, collapsed category expenses, descending amounts and tie order, dates, editing, keyboard expansion, escaped text, summary-only and mixed months, mobile layout');
  }}finally{await browser.close();}
 })().catch(err=>{console.error(err);process.exitCode=1;});
