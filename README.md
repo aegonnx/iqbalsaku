@@ -12,7 +12,7 @@ mySaku (formerly Iqbal Saku) is one personal money tracker for starting salary, 
 
 ## Emergency funds
 
-The dashboard shows Emergency funds in place of Total available. Set the amount in **Settings → Monthly budgets**, directly below starting budget / salary, using thousands (500 = Rp500.000). The reserve reduces remaining money without creating an expense or changing category totals. It is saved for the selected budget period, defaults to zero for older records and new months, and is included in account sync, offline storage, and JSON backups. Clear the field or enter zero to release the reserve.
+The dashboard shows Emergency funds in place of Total available. Tap **Set emergency funds** on Read to open its dedicated popup, using thousands (500 = Rp500.000). The reserve reduces remaining money without creating an expense or changing category totals. It is saved for the selected budget period, defaults to zero for older records and new months, and is included in account sync, offline storage, and JSON backups. Clear the field or enter zero to release the reserve.
 
 ## Income sources
 
@@ -91,7 +91,7 @@ For several expenses on the same date, use **Save + next** in Add expense. Each 
 
 Dialogs use one native autofocus step during the user's tap, with 240 ms entry and 180 ms exit animations. Exit completion controls dismissal instead of an arbitrary timeout. Keyboard geometry writes are coalesced once per animation frame and unchanged values are skipped. Save and Delete remain outside the scrolling fields; a second open or submit cannot replace a draft or duplicate a save.
 
-Edit opens without activating the keyboard. Expense entry uses Amount | Date and Category | Description above the keyboard, with aligned controls and consistent row spacing. Income retains a full-width amount followed by source and description. Add automatically focuses the thousands amount input. The header's Details button exposes notes and recent expense suggestions (and the date for income) in a separate scrolling area; Entry returns to the main fields. Save stays in the fixed dialog footer. Dialogs have accessible names, navigation focuses the page heading, and replacement renders restore relevant same-page focus. Page titles and month controls are inside the main landmark.
+Edit opens without activating the keyboard. Expense entry uses Amount | Date and Category | Description above the keyboard, with aligned controls and consistent row spacing. Income uses the same spacing and two-row grid: Amount | Date and Source | Description. Add automatically focuses the thousands amount input. The header's Details button exposes notes and recent expense suggestions in a separate scrolling area; Entry returns to the main fields. Save stays in the fixed dialog footer. Dialogs have accessible names, navigation focuses the page heading, and replacement renders restore relevant same-page focus. Page titles and month controls are inside the main landmark.
 
 Large histories render 60 matching expenses initially. Show more expenses loads another 60; search, category, and month changes reset the batch. Daily totals and monthly budgets always include all applicable records, including those not yet rendered. Search reuses a sorted text index and groups matches in one pass.
 

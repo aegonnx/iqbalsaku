@@ -26,15 +26,15 @@ const fs=require('node:fs'),path=require('node:path'),assert=require('node:asser
  const twoRows=async(page,kind)=>{
   const geometry=await page.evaluate(kind=>{
    const form=document.getElementById(kind+'-form'),rect=el=>{const r=el.getBoundingClientRect();return {top:r.top,bottom:r.bottom,left:r.left,right:r.right};};
-   return {amount:rect(form.elements.amount),date:kind==='expense'?rect(form.elements.date):null,category:rect(form.elements[kind==='expense'?'categoryId':'source']),description:rect(form.elements[kind==='expense'?'description':'title'])};
+   return {amount:rect(form.elements.amount),date:rect(form.elements.date),category:rect(form.elements[kind==='expense'?'categoryId':'source']),description:rect(form.elements[kind==='expense'?'description':'title'])};
   },kind);
   assert.ok(Math.abs(geometry.category.top-geometry.description.top)<1&&Math.abs(geometry.category.bottom-geometry.description.bottom)<1,JSON.stringify(geometry));
   assert.ok(geometry.amount.bottom<geometry.category.top&&geometry.category.right<geometry.description.left,JSON.stringify(geometry));
-  if(kind==='expense'){
+  {
    assert.ok(Math.abs(geometry.amount.top-geometry.date.top)<1&&Math.abs(geometry.amount.bottom-geometry.date.bottom)<1,JSON.stringify(geometry));
    assert.ok(Math.abs(geometry.amount.left-geometry.category.left)<1&&Math.abs(geometry.amount.right-geometry.category.right)<1,JSON.stringify(geometry));
    assert.ok(Math.abs(geometry.date.left-geometry.description.left)<1&&Math.abs(geometry.date.right-geometry.description.right)<1,JSON.stringify(geometry));
-  }else assert.ok(Math.abs(geometry.amount.left-geometry.category.left)<1&&Math.abs(geometry.amount.right-geometry.description.right)<1,JSON.stringify(geometry));
+  }
  };
  const closed=page=>page.waitForFunction(()=>!document.getElementById('expense-dialog').open&&!document.getElementById('confirm-dialog').open);
  try{

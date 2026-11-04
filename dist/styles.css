@@ -219,19 +219,18 @@ dialog .expense-form,dialog .confirm-form{min-height:0;overflow-y:auto;overscrol
 .expense-core>.amount-field{grid-column:1/-1}
 .expense-core>.field{min-width:0}
 .expense-core>.field :is(input,select){height:48px}
-/* Expense entry: two aligned rows, with date always within reach. Income
-   retains its established amount/source/description layout. */
-#expense-dialog .expense-core{align-items:start;gap:16px 12px}
-#expense-dialog .expense-core>.amount-field{grid-column:auto;min-width:0}
-#expense-dialog .expense-core>.field{gap:6px;line-height:20px}
-#expense-dialog .amount-label{line-height:20px;margin-bottom:6px;font-size:.875rem;color:var(--muted)}
-#expense-dialog .expense-core :is(input,select){width:100%;height:48px;min-height:48px;padding:10px 12px}
-#expense-dialog .expense-core .amount-input{font-size:1.5rem;line-height:1.1;padding:8px 12px}
-#expense-dialog .date-field input{min-inline-size:0;appearance:none;-webkit-appearance:none;font-size:1rem}
-#expense-dialog .date-field input::-webkit-date-and-time-value{text-align:left;min-height:1.25em}
-#expense-dialog .amount-preview{font-size:.75rem;line-height:18px;margin-top:6px;overflow-wrap:anywhere}
-#expense-dialog .dialog-header{margin-bottom:16px}
-#expense-dialog .dialog-inner>.form-actions{margin-top:12px;padding-top:12px}
+/* Shared two-row entry layout: Amount/Date, then category or source/Description. */
+:is(#expense-dialog,#income-dialog) .expense-core{align-items:start;gap:16px 12px}
+:is(#expense-dialog,#income-dialog) .expense-core>.amount-field{grid-column:auto;min-width:0}
+:is(#expense-dialog,#income-dialog) .expense-core>.field{gap:6px;line-height:20px}
+:is(#expense-dialog,#income-dialog) .amount-label{line-height:20px;margin-bottom:6px;font-size:.875rem;color:var(--muted)}
+:is(#expense-dialog,#income-dialog) .expense-core :is(input,select){width:100%;height:48px;min-height:48px;padding:10px 12px}
+:is(#expense-dialog,#income-dialog) .expense-core .amount-input{font-size:1.5rem;line-height:1.1;padding:8px 12px}
+:is(#expense-dialog,#income-dialog) .date-field input{min-inline-size:0;appearance:none;-webkit-appearance:none;font-size:1rem}
+:is(#expense-dialog,#income-dialog) .date-field input::-webkit-date-and-time-value{text-align:left;min-height:1.25em}
+:is(#expense-dialog,#income-dialog) .amount-preview{font-size:.75rem;line-height:18px;margin-top:6px;overflow-wrap:anywhere}
+:is(#expense-dialog,#income-dialog) .dialog-header{margin-bottom:16px}
+:is(#expense-dialog,#income-dialog) .dialog-inner>.form-actions{margin-top:12px;padding-top:12px}
 #expense-dialog .form-actions:has(.save-another){display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
 #expense-dialog .form-actions:has(.save-another) button{min-width:0;padding-inline:10px;font-size:.875rem;white-space:nowrap}
 .expense-options{min-height:0;overflow-y:auto;overscroll-behavior:contain;scroll-padding-block:8px}
@@ -244,6 +243,16 @@ dialog .expense-form,dialog .confirm-form{min-height:0;overflow-y:auto;overscrol
 dialog .confirmation-copy{flex-shrink:0;margin-bottom:16px}
 dialog .dialog-inner>.form-actions{flex-shrink:0;margin-top:16px;padding-top:16px;border-top:1px solid var(--line);background:var(--surface)}
 .settings-actions{position:sticky;bottom:calc(96px + var(--keyboard-space,0px));z-index:5;padding:12px 0;background:var(--surface);border-top:1px solid var(--line)}
+.emergency-dialog .dialog-inner{padding:20px}
+.emergency-dialog .dialog-header{margin-bottom:8px}
+.emergency-dialog .confirmation-copy{font-size:.875rem;margin-bottom:16px}
+.emergency-dialog .confirm-form{gap:16px}
+.emergency-dialog .amount-label{font-size:.875rem;line-height:20px;margin-bottom:6px;color:var(--muted)}
+.emergency-dialog .amount-input{font-size:1.5rem;line-height:1.2;min-height:48px;padding:10px 12px}
+.emergency-dialog .amount-preview{font-size:.75rem;line-height:18px;margin-top:6px}
+.emergency-dialog #reserve-help{font-size:.8125rem;line-height:1.6}
+.emergency-dialog .dialog-inner>.form-actions{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px;padding-top:12px}
+.emergency-dialog .form-actions button{padding-inline:12px;font-size:.875rem}
 @media(max-width:600px){
  dialog[open],:is(#expense-dialog,#income-dialog)[open]{position:fixed;top:auto;bottom:var(--keyboard-space,0px);left:0;right:0;margin:0 auto;width:100%;max-width:480px;max-height:calc(var(--visible-height,100dvh) - 16px);border-radius:24px 24px 0 0;padding-bottom:env(safe-area-inset-bottom)}
  dialog .dialog-inner{max-height:calc(var(--visible-height,100dvh) - 32px);padding:20px}
@@ -271,15 +280,21 @@ dialog .dialog-inner>.form-actions{flex-shrink:0;margin-top:16px;padding-top:16p
  .keyboard-open :is(#expense-dialog,#income-dialog) :is(.category-field select,.description-field input){height:44px;min-height:44px;line-height:1.25;padding:8px 12px}
  .keyboard-open :is(#expense-dialog,#income-dialog) .dialog-inner>.form-actions{margin-top:4px;padding-top:4px}
  .keyboard-open :is(#expense-dialog,#income-dialog) .form-actions button{min-height:44px;padding:10px 16px;line-height:1.25}
- .keyboard-open #expense-dialog .dialog-inner{padding:12px 16px}
- .keyboard-open #expense-dialog .dialog-header{margin-bottom:8px}
- .keyboard-open #expense-dialog .expense-core{gap:12px}
- .keyboard-open #expense-dialog .amount-label{font-size:.8125rem;line-height:18px;margin-bottom:4px}
- .keyboard-open #expense-dialog .expense-core>.field{font-size:.8125rem;line-height:18px;gap:4px}
- .keyboard-open #expense-dialog .expense-core :is(input,select){height:44px;min-height:44px;padding:8px 10px}
- .keyboard-open #expense-dialog .expense-core .amount-input{font-size:1.5rem;line-height:1.1;padding:6px 10px}
- .keyboard-open #expense-dialog .amount-preview{font-size:.75rem;line-height:18px;margin-top:4px}
- .keyboard-open #expense-dialog .dialog-inner>.form-actions{margin-top:8px;padding-top:8px}
+ .keyboard-open :is(#expense-dialog,#income-dialog) .dialog-inner{padding:12px 16px}
+ .keyboard-open :is(#expense-dialog,#income-dialog) .dialog-header{margin-bottom:8px}
+ .keyboard-open :is(#expense-dialog,#income-dialog) .expense-core{gap:12px}
+ .keyboard-open :is(#expense-dialog,#income-dialog) .amount-label{font-size:.8125rem;line-height:18px;margin-bottom:4px}
+ .keyboard-open :is(#expense-dialog,#income-dialog) .expense-core>.field{font-size:.8125rem;line-height:18px;gap:4px}
+ .keyboard-open :is(#expense-dialog,#income-dialog) .expense-core :is(input,select){height:44px;min-height:44px;padding:8px 10px}
+ .keyboard-open :is(#expense-dialog,#income-dialog) .expense-core .amount-input{font-size:1.5rem;line-height:1.1;padding:6px 10px}
+ .keyboard-open :is(#expense-dialog,#income-dialog) .amount-preview{font-size:.75rem;line-height:18px;margin-top:4px}
+ .keyboard-open :is(#expense-dialog,#income-dialog) .dialog-inner>.form-actions{margin-top:8px;padding-top:8px}
+ .keyboard-open .emergency-dialog .dialog-inner{padding:12px 16px}
+ .keyboard-open .emergency-dialog .confirm-form{gap:10px}
+ .keyboard-open .emergency-dialog .dialog-header{margin-bottom:4px}
+ .keyboard-open .emergency-dialog .confirmation-copy{margin-bottom:8px}
+ .keyboard-open .emergency-dialog .dialog-inner>.form-actions{margin-top:8px;padding-top:8px}
+ .keyboard-open .emergency-dialog .form-actions button{min-height:44px;padding-block:10px;line-height:1.25}
 }
 
 .pull-refresh{width:48px;height:48px;padding:11px;display:grid;place-items:center;border-radius:50%}

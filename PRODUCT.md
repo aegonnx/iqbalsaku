@@ -28,7 +28,7 @@ Success means reliable saving, correct balances after every change, fast entry w
 - Optional Supabase sign-in keeps account expenses and income available across devices. Signed-out device records and signed-in account records remain separate. Moving device records into an account requires importing a backup after signing in.
 
 - One tracker opens directly at the homepage. Starting salary is the monthly budget; bonuses and other received money add to available funds. Remaining = starting budget + extra income − expenses − emergency funds. Preserve the existing expense flow, category budgets, configured budget periods, sync, and backups.
-- Emergency funds replace Total available on Read and are set per budget period beside the starting budget in Settings. Reserves reduce remaining money and daily spending guidance, never expenses or category totals. Old and unset budgets use zero; sync, offline storage, and JSON backups preserve the reserve.
+- Emergency funds replace Total available on Read and are set per budget period in a dedicated popup opened by Set emergency funds on Read. The reserve is separate from the starting-budget form. Reserves reduce remaining money and daily spending guidance, never expenses or category totals. Old and unset budgets use zero; sync, offline storage, and JSON backups preserve the reserve.
 - Month navigation arrows have distinct 48-pixel touch targets separated from the center month picker.
 - Settings manages income sources with rename, add, reorder, and delete. Deletion transfers records to a chosen source without changing totals. Sources follow account sync, offline storage, and backups; old documents receive default sources. Starting salary remains a monthly budget.
 - Income supports amount, source, date received, optional description/note, and editing/deletion. Saved Money Plus records migrate idempotently; salary references are excluded from extra income and existing starting budgets are never overwritten. Signed-out device income is imported into an account only by an explicit action.
@@ -49,7 +49,7 @@ Success means reliable saving, correct balances after every change, fast entry w
 - Preserve JSON export/import, transaction CSV export, and confirmed reset. Preserve historical monthly summaries without inventing individual dates or transactions.
 - The public build starts empty. Never include personal backups, private financial records, passwords, or secret/service-role keys in public assets or Git.
 - Retain the lightweight existing implementation: static HTML, CSS, JavaScript modules, IndexedDB, and a locally bundled Supabase client. Cloudflare Pages serves the dist directory; no app server is required for hosting.
-- Expense entry uses a two-column, two-row grid: Amount and Date first, then Category and Description. Income retains its full-width amount followed by source and description. Essential fields and Save fit above the open keyboard. Expense notes and income date/notes remain in Details.
+- Expense entry uses a two-column, two-row grid: Amount and Date first, then Category and Description. Income uses the same grid: Amount/Date followed by Source/Description. Essential fields and Save fit above the open keyboard. Notes remain in Details for both entry types.
 - Prevent duplicate dialogs and duplicate saves. Pull-to-refresh uses a moving circle and is disabled during expense or income entry, or saving.
 - AI chat is outside the current scope; the user chose to leave it out.
 

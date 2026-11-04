@@ -4,8 +4,9 @@
 .balance-breakdown span,.income-help {color:var(--muted);font-size:.8125rem;line-height:1.6}
 .balance-breakdown strong {font-size:1rem;font-weight:500;overflow-wrap:anywhere}
 .income-positive {color:var(--success)}
-.balance-actions {display:flex;gap:12px;align-items:center;margin-top:18px;flex-wrap:wrap}
+.balance-actions {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;align-items:stretch;margin-top:18px}
 .balance-actions button {flex:1}
+.balance-actions .secondary {font-size:.875rem;line-height:1.4;min-width:0;min-height:52px;padding:12px}
 .balance-actions .text-button {font-size:.8125rem}
 .income-help {margin:8px 0 16px}
 .income-row .transaction-meta {white-space:normal;overflow-wrap:anywhere}
